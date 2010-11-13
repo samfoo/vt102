@@ -196,7 +196,8 @@ class screen:
         self.cursor_save_stack.append((self.x, self.y))
 
     def _restore_cursor(self):
-        self.x, self.y = self.cursor_save_stack.pop()
+        if len(self.cursor_save_stack):
+            self.x, self.y = self.cursor_save_stack.pop()
 
     def _insert_line(self, count):
         # Inserts lines at line with cursor. Lines displayed below cursor move 
@@ -204,7 +205,7 @@ class screen:
         trimmed = self.display[:self.y+1] + \
                   [" " * self.size[1]] * count + \
                   self.display[self.y+1:self.y+count+1]
-        self.display = trimmed
+        self.display = trimmed[:self.size[0]]
 
     def _delete_character(self, count):
         # Deletes count characters, starting with the character at cursor
@@ -274,8 +275,13 @@ class screen:
     def _cursor_position(self, row, column):
         # Obnoxiously row/column is 1 based, instead of zero based, so we need 
         # to compensate. I know I've created bugs in here somehow.
-        self.y = row - 1 
-        self.x = column - 1
+        # Confoundingly, inputs of 0 are still acceptable, and should move to
+        # the beginning of the row/column as if they were 1. *sigh*
+        if row == 0: row = 1
+        if column == 0: column = 1
+        
+        self.y = min(row - 1, self.size[0] - 1)
+        self.x = min(column - 1, self.size[1] - 1)
 
     def _home(self):
         self.y = self.x = 0

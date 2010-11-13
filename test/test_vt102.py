@@ -1,0 +1,399 @@
+import unittest
+
+from vt102 import *
+
+class TestScreen(unittest.TestCase):
+    def test_resize(self):
+        s = screen((2,2))
+        assert s.display == ["  ", "  "]
+
+        s.resize((3,3))
+        assert s.display == ["   ", "   ", "   "]
+
+    def test_print(self):
+        s = screen((3,3))
+        s._print("s")
+
+        assert s.display == ["s  ", "   ", "   "]
+        assert s.cursor() == (1, 0)
+
+        s.x = 1; s.y = 1
+        s._print("a")
+
+        assert s.display == ["s  ", " a ", "   "]
+
+    def test_carriage_return(self):
+        s = screen((3,3))
+        s.x = 2
+        s._carriage_return()
+        
+        assert s.x == 0
+
+    def test_index(self):
+        s = screen((2,2))
+        s.display = ["bo", "sh"]
+        s.x = 1
+        s._index()
+
+        # Indexing on a row that isn't the last should just move the cursor
+        # down.
+        assert s.y == 1
+        assert s.x == 1
+
+        s._index()
+
+        # Indexing on the last row should push everything up and create a new
+        # row at the bottom.
+        assert s.display == ["sh", "  "]
+        assert s.y == 1
+
+    def test_reverse_index(self):
+        s = screen((2,2))
+        s.display = ["bo", "sh"]
+        s.x = 1
+        s._reverse_index()
+
+        # Reverse indexing on the first row should push rows down and create a
+        # new row at the top.
+        assert s.y == 0 
+        assert s.x == 1
+        assert s.display == ["  ", "bo"]
+
+        s.y = 1
+        s._reverse_index()
+
+        assert s.display == ["  ", "bo"]
+        assert s.y == 0 
+
+    def test_line_feed(self):
+        # Line feeds are the same as indexes, except they move the cursor to
+        # the first character on the created/next line
+        s = screen((2,2))
+        s.display = ["bo", "sh"]
+        s.x = 1; s.y = 0
+        s._linefeed()
+
+        assert s.x == 0
+        assert s.y == 1
+
+    def test_tabstops(self):
+        s = screen((10,10))
+        s.x = 1
+        s._set_tab_stop()
+        s.x = 8
+        s._set_tab_stop()
+
+        s.x = 0
+        s._tab()
+        assert s.x == 1
+        s._tab()
+        assert s.x == 8
+        s._tab()
+        assert s.x == 9
+        s._tab()
+        assert s.x == 9
+
+    def test_clear_tabstops(self):
+        s = screen((10, 10))
+        s.x = 1
+        s._set_tab_stop()
+        s._clear_tab_stop(0x30)
+
+        assert len(s.tabstops) == 0
+
+        s._set_tab_stop()
+        s.x = 5
+        s._set_tab_stop()
+        s.x = 9
+        s._set_tab_stop()
+
+        assert len(s.tabstops) == 3
+
+        s._clear_tab_stop(0)
+
+        assert len(s.tabstops) == 0
+
+    def test_resize_shifts_horizontal(self):
+        # If the current display is thinner than the requested size...
+        s = screen((2,2))
+        s.display = ["bo", "sh"]
+        # New columns should get added to the right.
+        s.resize((2,3))
+
+        assert s.display == ["bo ", "sh "]
+
+        # If the current display is wider than the requested size...
+        s = screen((2,2))
+        s.display = ["bo", "sh"]
+        # Columns should be removed from the right...
+        s.resize((2, 1))
+
+        assert s.display == ["b", "s"]
+
+    def test_backspace(self):
+        s = screen((2,2))
+        assert s.x == 0
+        s._backspace()
+        assert s.x == 0
+        s.x = 1
+        s._backspace()
+        assert s.x == 0
+
+    def test_save_cursor(self):
+        s = screen((10,10))
+        s._save_cursor()
+
+        s.x = 3
+        s.y = 5
+        s._save_cursor()
+        s.x = 4
+        s.y = 4
+        s._restore_cursor()
+
+        assert s.x == 3
+        assert s.y == 5
+
+        s._restore_cursor()
+
+        assert s.x == 0
+        assert s.y == 0
+
+    def test_restore_cursor_with_none_saved(self):
+        s = screen((10, 10))
+        s.x = 5
+        s.y = 5
+        s._restore_cursor()
+
+        assert s.x == 5
+        assert s.y == 5
+
+    def test_insert_line(self):
+        s = screen((3,3))
+        s.display = ["sam", "is ", "   "]
+
+        assert s.x == 0
+        assert s.y == 0
+
+        s._insert_line(1)
+
+        assert s.display == ["sam", "   ", "is "]
+
+        assert s.x == 0
+        assert s.y == 0
+
+        s.display = ["sam", "is ", "foo"]
+        s._insert_line(2)
+
+        assert s.display == ["sam", "   ", "   "]
+
+    def test_delete_characters(self):
+        s = screen((3,3))
+        s.display = ["sam", "is ", "foo"]
+        s.x = 0
+        s.y = 0
+        s._delete_character(2)
+
+        assert s.display == ["m  ", "is ", "foo"]
+
+        s.y = 2
+        s.x = 2
+        s._delete_character(1)
+
+        assert s.display == ["m  ", "is ", "fo "]
+
+    def test_erase_in_line(self):
+        s = screen((5,5))
+        s.display = ["sam i", 
+                     "s foo", 
+                     "but a", 
+                     "re yo", 
+                     "u?   "]
+        s.x = 2
+        s.y = 0
+
+        # Erase from the beginning of the line to the cursor
+        s._erase_in_line(0x31)
+        assert s.display == ["    i",
+                             "s foo", 
+                             "but a", 
+                             "re yo", 
+                             "u?   "]
+
+        # Erase from cursor to the end of line
+        s._erase_in_line(0x30)
+        assert s.display == ["     ",
+                             "s foo", 
+                             "but a", 
+                             "re yo", 
+                             "u?   "]
+
+        s.y = 1
+        # Erase the entire line
+        s._erase_in_line(0x32)
+        assert s.display == ["     ",
+                             "     ", 
+                             "but a", 
+                             "re yo", 
+                             "u?   "]
+
+    def test_erase_in_display(self):
+        s = screen((5,5))
+        s.display = ["sam i", 
+                     "s foo", 
+                     "but a", 
+                     "re yo", 
+                     "u?   "]
+        s.x = 2
+        s.y = 0
+
+        # Erase from the beginning of the line to the cursor on all rows
+        s._erase_in_display(0x31)
+        assert s.display == ["    i",
+                             "   oo", 
+                             "    a", 
+                             "   yo", 
+                             "     "]
+
+        # Erase from cursor to the end of line on all rows
+        s.display = ["sam i", 
+                     "s foo", 
+                     "but a", 
+                     "re yo", 
+                     "u?   "]
+        s._erase_in_display(0x30)
+        assert s.display == ["sa   ",
+                             "s    ", 
+                             "bu   ", 
+                             "re   ", 
+                             "u?   "]
+
+        s.y = 1
+        # Erase the entire screen
+        s._erase_in_display(0x32)
+        assert s.display == ["     ",
+                             "     ", 
+                             "     ", 
+                             "     ", 
+                             "     "]
+
+    def test_cursor_up(self):
+        s = screen((10, 10))
+
+        # Moving the cursor up at the top doesn't do anything
+        s._cursor_up(1)
+        assert s.y == 0
+
+        s.y = 1
+
+        # Moving the cursor past the top moves it to the top
+        s._cursor_up(10)
+        assert s.y == 0
+
+        s.y = 5
+        # Can move the cursor more than one up.
+        s._cursor_up(3)
+        assert s.y == 2
+
+    def test_cursor_down(self):
+        s = screen((10, 10))
+
+        # Moving the cursor down at the bottom doesn't do anything
+        s.y = 9
+        s._cursor_down(1)
+        assert s.y == 9
+
+        s.y = 8 
+
+        # Moving the cursor past the bottom moves it to the bottom
+        s._cursor_down(10)
+        assert s.y == 9 
+
+        s.y = 5
+        # Can move the cursor more than one down.
+        s._cursor_down(3)
+        assert s.y == 8
+
+    def test_cursor_back(self):
+        s = screen((10, 10))
+
+        # Moving the cursor left at the margin doesn't do anything
+        s.x = 0 
+        s._cursor_back(1)
+        assert s.x == 0
+
+        s.x = 3 
+
+        # Moving the cursor past the left margin moves it to the left margin
+        s._cursor_back(10)
+        assert s.x == 0 
+
+        s.x = 5
+        # Can move the cursor more than one back.
+        s._cursor_back(3)
+        assert s.x == 2
+
+    def test_cursor_forward(self):
+        s = screen((10, 10))
+
+        # Moving the cursor right at the margin doesn't do anything
+        s.x = 9 
+        s._cursor_forward(1)
+        assert s.x == 9 
+
+        # Moving the cursor past the right margin moves it to the right margin
+        s.x = 8 
+        s._cursor_forward(10)
+        assert s.x == 9
+
+        # Can move the cursor more than one forward.
+        s.x = 5
+        s._cursor_forward(3)
+        assert s.x == 8 
+
+    def test_cursor_position(self):
+        s = screen((10, 10))
+
+        # Rows/columns are backwards of x/y and are 1-indexed instead of 0-indexed
+        s._cursor_position(5, 10)
+        assert s.x == 9
+        assert s.y == 4
+
+        # Confusingly enough, however, 0-inputs are acceptable and should be
+        # the same a 1
+        s._cursor_position(0, 10)
+        assert s.x == 9
+        assert s.y == 0
+
+        # Moving outside the margins constrains to within the margins.
+        s._cursor_position(20, 20)
+        assert s.x == 9
+        assert s.y == 9
+
+    def test_home(self):
+        s = screen((10, 10))
+        s.x = 5
+        s.y = 5
+        s._home()
+
+        assert s.x == 0
+        assert s.y == 0
+
+    def test_resize_shifts_vertical(self):
+        # If the current display is shorter than the requested screen size... 
+        s = screen((2,2))
+        s.display = ["bo", "sh"]
+        # New rows should get added on the bottom...
+        s.resize((3,2))
+
+        assert s.display == ["bo", "sh", "  "]
+
+        # If the current display is taller than the requested screen size...
+        s = screen((2,2))
+        s.display = ["bo", "sh"]
+        # Rows should be removed from the top...
+        s.resize((1,2))
+
+        assert s.display == ["sh"]
+
+if __name__ == "__main__":
+    unittest.main()
