@@ -23,8 +23,24 @@ class stream:
         DECRC: "restore-cursor",
     }
 
+    sequence = {
+        CUU: "cursor-up",
+        CUD: "cursor-down",
+        CUF: "cursor-right",
+        CUB: "cursor-left",
+        CUP: "cursor-move",
+        HVP: "cursor-move",
+        EL: "erase-in-line",
+        ED: "erase-in-display",
+        DCH: "delete-characters",
+        IL: "isert-lines",
+        DL: "delete-lines",
+    }
+
     def __init__(self):
         self.state = "stream"
+        self.params = []
+        self.current_param = ""
 
     def _escape_sequence(self, char):
         num = ord(char)
@@ -32,6 +48,23 @@ class stream:
             self.state = "escape-lb"
         elif self.escape.has_key(num):
             self.dispatch(self.escape[num])
+
+    def _end_escape_sequence(self, char):
+        if sequence.has_key(char):
+            self.dispatch(sequence[char], *self.params)
+
+    def _escape_parameters(self, char):
+        if char == ";":
+            self.params.append(int(self.current_param))
+        elif char not in string.digits:
+            if len(self.current_param) > 0:
+                self.params.append(int(self.current_param))
+
+            # If we're in parameter parsing mode, but we see a non-numeric 
+            # value, it must be the end of the control sequence.
+            self._end_escape_sequence(char)
+        else:
+            self.current_param += char
 
     def _stream(self, char):
         num = ord(char)
@@ -48,7 +81,7 @@ class stream:
         elif self.state == "escape":
             self._escape_sequence(char)
         elif self.state == "escape-lb":
-            pass
+            self._escape_parameters(char)
 
     def process(self, input):
         while len(input) > 0:
