@@ -120,6 +120,8 @@ class stream:
         num = ord(char)
         if char == "[":
             self.state = "escape-lb"
+        elif char == "(":
+            self.state = "charset"
         elif self.escape.has_key(num):
             self.dispatch(self.escape[num])
             self.state = "stream"
@@ -134,6 +136,8 @@ class stream:
         if self.sequence.has_key(ord(char)):
             self.dispatch(self.sequence[ord(char)], *self.params)
             self.state = "stream"
+            self.current_param = ""
+            self.params = []
 
     def _escape_parameters(self, char):
         """
@@ -148,6 +152,8 @@ class stream:
         if char == ";":
             self.params.append(int(self.current_param))
             self.current_param = ""
+        elif char == "?":
+            self.state = "mode"
         elif char not in string.digits:
             if len(self.current_param) > 0:
                 self.params.append(int(self.current_param))
@@ -157,6 +163,16 @@ class stream:
             self._end_escape_sequence(char)
         else:
             self.current_param += char
+
+    def _mode(self, char):
+        if char == "l" or char == "h":
+            # 'l' or 'h' designates the end of a mode stream. We don't really
+            # care about mode streams so anything else seen while in the mode
+            # state, is just ignored.
+            self.state = "stream"
+
+    def _charset(self, char):
+        pass
 
     def _stream(self, char):
         """
@@ -182,6 +198,10 @@ class stream:
             self._escape_sequence(char)
         elif self.state == "escape-lb":
             self._escape_parameters(char)
+        elif self.state == "mode":
+            self._mode(char)
+        elif self.state == "charset":
+            self._charset(char)
 
     def process(self, chars):
         """
@@ -461,28 +481,37 @@ class screen:
         row = row[:self.x] + row[self.x+count:] + " " * count
         self.display[self.y] = row
 
-    def _erase(self, row, type_of):
+    def _erase_in_line(self, type_of=0x30):
         """
         Erases the row in a specific way, depending on the type_of.
         """
 
+        row = self.display[self.y]
         if type_of == 0x31:
             # Erase from the beginning of the line to the cursor, including it
             row = " " * (self.x+1) + row[self.x+1:]
         elif type_of == 0x32:
             # Erase the entire line.
             row = " " * self.size[1]
-        elif 0x30:
+        elif type_of == 0x30:
             # Erase from the cursor to the end of line, including the cursor
             row = row[:self.x] + " " * (self.size[1] - self.x)
-        return row
-
-    def _erase_in_line(self, type_of=0x30):
-        row = self._erase(self.display[self.y], type_of)
         self.display[self.y] = row
 
     def _erase_in_display(self, type_of=0x30):
-        self.display = [self._erase(r, type_of) for r in self.display]
+        if type_of == 0x31:
+            # Erase from cursor to the end of the display, including the 
+            # cursor.
+            self.display = self.display[:self.y] + \
+                    [" " * self.size[1]] * (self.size[0] - self.y)
+        elif type_of == 0x32:
+            # Erase from the beginning of the display to the cursor, including 
+            # it.
+            self.display = [" " * self.size[1]] * (self.y + 1) + \
+                    self.display[self.y+1:]
+        elif type_of == 0x30:
+            # Erase the whole display.
+            self.display = [" " * self.size[1]] * self.size[0]
 
     def _set_insert_mode(self):
         self.irm = "insert"

@@ -14,9 +14,10 @@ class TestStream(unittest.TestCase):
     def test_multi_param_params(self):
         s = stream()
         s.state = "escape-lb"
-        input = "5;25" + chr(CUD)
+        input = "5;25"
         s.process(input)
-        assert s.params == [5, 25]
+        assert s.params == [5]
+        assert s.current_param == "25"
 
     def test_cursor_down(self):
         class argcheck:
@@ -345,33 +346,32 @@ class TestScreen(unittest.TestCase):
                      "but a", 
                      "re yo", 
                      "u?   "]
-        s.x = 2
-        s.y = 0
+        s.y = 2 
 
-        # Erase from the beginning of the line to the cursor on all rows
+        # Erase from the cursor to the end of the display.
         s._erase_in_display(0x31)
-        assert s.display == ["    i",
-                             "   oo", 
-                             "    a", 
-                             "   yo", 
+        assert s.display == ["sam i",
+                             "s foo", 
+                             "     ", 
+                             "     ", 
                              "     "]
 
-        # Erase from cursor to the end of line on all rows
+        # Erase from cursor to the beginning of the display. 
         s.display = ["sam i", 
                      "s foo", 
                      "but a", 
                      "re yo", 
                      "u?   "]
-        s._erase_in_display(0x30)
-        assert s.display == ["sa   ",
-                             "s    ", 
-                             "bu   ", 
-                             "re   ", 
+        s._erase_in_display(0x32)
+        assert s.display == ["     ",
+                             "     ", 
+                             "     ", 
+                             "re yo", 
                              "u?   "]
 
         s.y = 1
         # Erase the entire screen
-        s._erase_in_display(0x32)
+        s._erase_in_display(0x30)
         assert s.display == ["     ",
                              "     ", 
                              "     ", 
