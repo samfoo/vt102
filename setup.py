@@ -1,11 +1,10 @@
 from distutils.core import setup
 import sys
 
-sys.path.append("vt102")
 import vt102
 
 setup(name="vt102",
-      version="0.1",
+      version="0.1.8",
       author="Sam Gibson",
       author_email="sam@ifdown.net",
       url="https://github.com/samfoo/vt102",
