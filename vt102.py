@@ -41,6 +41,7 @@ class stream:
         self.state = "stream"
         self.params = []
         self.current_param = ""
+        self.listeners = {} 
 
     def _escape_sequence(self, char):
         num = ord(char)
@@ -48,14 +49,17 @@ class stream:
             self.state = "escape-lb"
         elif self.escape.has_key(num):
             self.dispatch(self.escape[num])
+            self.state = "stream"
 
     def _end_escape_sequence(self, char):
-        if sequence.has_key(char):
-            self.dispatch(sequence[char], *self.params)
+        if self.sequence.has_key(ord(char)):
+            self.dispatch(self.sequence[ord(char)], *self.params)
+            self.state = "stream"
 
     def _escape_parameters(self, char):
         if char == ";":
             self.params.append(int(self.current_param))
+            self.current_param = ""
         elif char not in string.digits:
             if len(self.current_param) > 0:
                 self.params.append(int(self.current_param))
@@ -88,8 +92,18 @@ class stream:
             self.consume(input[0])
             input = input[1:]
 
-    def dispatch(event, *args):
-        pass
+    def add_event_listener(self, event, function):
+        if not self.listeners.has_key(event):
+            self.listeners[event] = []
+
+        self.listeners[event].append(function)
+
+    def dispatch(self, event, *args):
+        for callback in self.listeners.get(event, []):
+            if len(args) > 0:
+                callback(*args)
+            else:
+                callback()
 
 class screen:
     def __init__(self, (rows, cols)):
@@ -199,7 +213,7 @@ class screen:
         if len(self.cursor_save_stack):
             self.x, self.y = self.cursor_save_stack.pop()
 
-    def _insert_line(self, count):
+    def _insert_line(self, count=1):
         # Inserts lines at line with cursor. Lines displayed below cursor move 
         # down. Lines moved past the bottom margin are lost. 
         trimmed = self.display[:self.y+1] + \
@@ -207,7 +221,7 @@ class screen:
                   self.display[self.y+1:self.y+count+1]
         self.display = trimmed[:self.size[0]]
 
-    def _delete_character(self, count):
+    def _delete_character(self, count=1):
         # Deletes count characters, starting with the character at cursor
         # position. When a character is deleted, all characters to the right 
         # of cursor move left.
@@ -223,16 +237,16 @@ class screen:
         elif type == 0x32:
             # Erase the entire line.
             row = " " * self.size[1]
-        else:
+        elif 0x30:
             # Erase from the cursor to the end of line, including the cursor
             row = row[:self.x] + " " * (self.size[1] - self.x)
         return row
 
-    def _erase_in_line(self, type):
+    def _erase_in_line(self, type=0x30):
         row = self._erase(self.display[self.y], type)
         self.display[self.y] = row
 
-    def _erase_in_display(self, type):
+    def _erase_in_display(self, type=0x30):
         self.display = [self._erase(r, type) for r in self.display]
 
     def _set_insert_mode(self):
@@ -245,26 +259,26 @@ class screen:
         # Sets a horizontal tab stop at cursor position.
         self.tabstops.append(self.x)
 
-    def _clear_tab_stop(self, type):
+    def _clear_tab_stop(self, type=0x33):
         if type == 0x30:
             # Clears a horizontal tab stop at cursor position.
             try: self.tabstops.remove(self.x) 
             except ValueError,e: pass
-        else:
+        elif type == 0x33:
             # Clears all horizontal tab stops
             self.tabstops = []
 
-    def _cursor_up(self, count):
+    def _cursor_up(self, count=0):
         # Moves cursor up count lines in same column. Cursor stops at top 
         # margin.
         self.y = max(0, self.y - count)
 
-    def _cursor_down(self, count):
+    def _cursor_down(self, count=0):
         # Moves cursor down count lines in same column. Cursor stops at bottom 
         # margin.
         self.y = min(self.size[0] - 1, self.y + count)
 
-    def _cursor_back(self, count):
+    def _cursor_back(self, count=0):
         # Moves cursor left count columns. Cursor stops at left margin.
         self.x = max(0, self.x - count)
 
@@ -272,7 +286,7 @@ class screen:
         # Moves cursor right count columns. Cursor stops at right margin.
         self.x = min(self.size[1] - 1, self.x + count)
 
-    def _cursor_position(self, row, column):
+    def _cursor_position(self, row=0, column=0):
         # Obnoxiously row/column is 1 based, instead of zero based, so we need 
         # to compensate. I know I've created bugs in here somehow.
         # Confoundingly, inputs of 0 are still acceptable, and should move to

@@ -1,6 +1,108 @@
 import unittest
 
 from vt102 import *
+from control import *
+
+class TestStream(unittest.TestCase):
+    class counter:
+        def __init__(self):
+            self.count = 0
+
+        def __call__(self, **args):
+            self.count += 1
+
+    def test_multi_param_params(self):
+        s = stream()
+        s.state = "escape-lb"
+        input = "5;25" + chr(CUD)
+        s.process(input)
+        assert s.params == [5, 25]
+
+    def test_cursor_down(self):
+        class argcheck:
+            def __init__(self):
+                self.count = 0
+            def __call__(self, distance):
+                self.count += 1
+                assert distance == 5
+
+        s = stream()
+        input = "\000" + chr(ESC) + "[5" + chr(CUD)
+        e = argcheck()
+        s.add_event_listener("cursor-down", e)
+        s.process(input)
+
+        assert e.count == 1
+        assert s.state == "stream"
+
+    def test_cursor_up(self):
+        class argcheck:
+            def __init__(self):
+                self.count = 0
+            def __call__(self, distance):
+                self.count += 1
+                assert distance == 5
+
+        s = stream()
+        input = "\000" + chr(ESC) + "[5" + chr(CUU)
+        e = argcheck()
+        s.add_event_listener("cursor-up", e)
+        s.process(input)
+
+        assert e.count == 1
+        assert s.state == "stream"
+
+    def test_basic_escapes(self):
+        s = stream()
+
+        for cmd, event in stream.escape.iteritems():
+            c = self.counter()
+            s.add_event_listener(event, c)
+            s.consume(chr(ESC))
+            assert s.state == "escape"
+            s.consume(chr(cmd))
+            assert c.count == 1
+            assert s.state == "stream"
+
+    def test_backspace(self):
+        s = stream()
+
+        c = self.counter()
+        s.add_event_listener("backspace", c)
+        s.consume(chr(BS))
+
+        assert c.count == 1
+        assert s.state == "stream"
+
+    def test_tab(self):
+        s = stream()
+
+        c = self.counter()
+        s.add_event_listener("tab", c)
+        s.consume(chr(HT))
+
+        assert c.count == 1
+        assert s.state == "stream"
+
+    def test_linefeed(self):
+        s = stream()
+
+        c = self.counter()
+        s.add_event_listener("linefeed", c)
+        s.process(chr(LF) + chr(VT) + chr(FF))
+        
+        assert c.count == 3
+        assert s.state == "stream"
+
+    def test_carriage_return(self):
+        s = stream()
+
+        c = self.counter()
+        s.add_event_listener("carriage-return", c)
+        s.consume(chr(CR))
+        
+        assert c.count == 1 
+        assert s.state == "stream"
 
 class TestScreen(unittest.TestCase):
     def test_resize(self):
@@ -109,7 +211,7 @@ class TestScreen(unittest.TestCase):
 
         assert len(s.tabstops) == 3
 
-        s._clear_tab_stop(0)
+        s._clear_tab_stop(0x33)
 
         assert len(s.tabstops) == 0
 
