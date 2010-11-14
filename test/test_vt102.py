@@ -314,17 +314,22 @@ class TestScreen(unittest.TestCase):
         s.x = 2
         s.y = 0
 
-        # Erase from the beginning of the line to the cursor
-        s._erase_in_line(0x31)
-        assert s.display == ["    i",
+        # Erase from cursor to the end of line
+        s._erase_in_line(0)
+        assert s.display == ["sa   ",
                              "s foo", 
                              "but a", 
                              "re yo", 
                              "u?   "]
 
-        # Erase from cursor to the end of line
-        s._erase_in_line(0x30)
-        assert s.display == ["     ",
+        # Erase from the beginning of the line to the cursor
+        s.display = ["sam i", 
+                     "s foo", 
+                     "but a", 
+                     "re yo", 
+                     "u?   "]
+        s._erase_in_line(1)
+        assert s.display == ["    i",
                              "s foo", 
                              "but a", 
                              "re yo", 
@@ -332,8 +337,13 @@ class TestScreen(unittest.TestCase):
 
         s.y = 1
         # Erase the entire line
-        s._erase_in_line(0x32)
-        assert s.display == ["     ",
+        s.display = ["sam i", 
+                     "s foo", 
+                     "but a", 
+                     "re yo", 
+                     "u?   "]
+        s._erase_in_line(2)
+        assert s.display == ["sam i",
                              "     ", 
                              "but a", 
                              "re yo", 
@@ -349,7 +359,7 @@ class TestScreen(unittest.TestCase):
         s.y = 2 
 
         # Erase from the cursor to the end of the display.
-        s._erase_in_display(0x31)
+        s._erase_in_display(0)
         assert s.display == ["sam i",
                              "s foo", 
                              "     ", 
@@ -362,7 +372,7 @@ class TestScreen(unittest.TestCase):
                      "but a", 
                      "re yo", 
                      "u?   "]
-        s._erase_in_display(0x32)
+        s._erase_in_display(1)
         assert s.display == ["     ",
                              "     ", 
                              "     ", 
@@ -371,7 +381,7 @@ class TestScreen(unittest.TestCase):
 
         s.y = 1
         # Erase the entire screen
-        s._erase_in_display(0x30)
+        s._erase_in_display(2)
         assert s.display == ["     ",
                              "     ", 
                              "     ", 

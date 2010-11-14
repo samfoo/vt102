@@ -102,6 +102,8 @@ class stream:
         DCH: "delete-characters",
         IL: "insert-lines",
         DL: "delete-lines",
+        SGR: "select-graphic-rendition",
+        DECSTBM: "set-margins",
     }
 
     def __init__(self):
@@ -481,35 +483,35 @@ class screen:
         row = row[:self.x] + row[self.x+count:] + " " * count
         self.display[self.y] = row
 
-    def _erase_in_line(self, type_of=0x30):
+    def _erase_in_line(self, type_of=0):
         """
         Erases the row in a specific way, depending on the type_of.
         """
 
         row = self.display[self.y]
-        if type_of == 0x31:
-            # Erase from the beginning of the line to the cursor, including it
-            row = " " * (self.x+1) + row[self.x+1:]
-        elif type_of == 0x32:
-            # Erase the entire line.
-            row = " " * self.size[1]
-        elif type_of == 0x30:
+        if type_of == 0:
             # Erase from the cursor to the end of line, including the cursor
             row = row[:self.x] + " " * (self.size[1] - self.x)
+        elif type_of == 1:
+            # Erase from the beginning of the line to the cursor, including it
+            row = " " * (self.x+1) + row[self.x+1:]
+        elif type_of == 2:
+            # Erase the entire line.
+            row = " " * self.size[1]
         self.display[self.y] = row
 
-    def _erase_in_display(self, type_of=0x30):
-        if type_of == 0x31:
+    def _erase_in_display(self, type_of=0):
+        if type_of == 0:
             # Erase from cursor to the end of the display, including the 
             # cursor.
             self.display = self.display[:self.y] + \
                     [" " * self.size[1]] * (self.size[0] - self.y)
-        elif type_of == 0x32:
+        elif type_of == 1:
             # Erase from the beginning of the display to the cursor, including 
             # it.
             self.display = [" " * self.size[1]] * (self.y + 1) + \
                     self.display[self.y+1:]
-        elif type_of == 0x30:
+        elif type_of == 2:
             # Erase the whole display.
             self.display = [" " * self.size[1]] * self.size[0]
 
@@ -538,27 +540,27 @@ class screen:
             # Clears all horizontal tab stops
             self.tabstops = []
 
-    def _cursor_up(self, count=0):
+    def _cursor_up(self, count=1):
         """
         Moves cursor up count lines in same column. Cursor stops at top 
         margin.
         """
         self.y = max(0, self.y - count)
 
-    def _cursor_down(self, count=0):
+    def _cursor_down(self, count=1):
         """
         Moves cursor down count lines in same column. Cursor stops at bottom 
         margin.
         """
         self.y = min(self.size[0] - 1, self.y + count)
 
-    def _cursor_back(self, count=0):
+    def _cursor_back(self, count=1):
         """
         Moves cursor left count columns. Cursor stops at left margin.
         """
         self.x = max(0, self.x - count)
 
-    def _cursor_forward(self, count):
+    def _cursor_forward(self, count=1):
         """
         Moves cursor right count columns. Cursor stops at right margin.
         """

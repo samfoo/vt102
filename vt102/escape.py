@@ -57,3 +57,18 @@ IL = 0x4c
 displayed below cursor move up. Lines added to bottom of screen have spaces 
 with same character attributes as last line moved up."""
 DL = 0x4d
+
+"""Select graphics rendition. The terminal can display the following character 
+attributes that change the character display without changing the character.
+
+    * Underline
+    * Reverse video (character background opposite of the screen background)
+    * Blink
+    * Bold (increased intensity)
+"""
+SGR = 0x6d
+
+"""Selects top and bottom margins, defining the scrolling region. Pt is line 
+number of first line in the scrolling region. Pb is line number of bottom line.
+If arguments are not selected, the complete screen is used (no margins)."""
+DECSTBM = 0x72
