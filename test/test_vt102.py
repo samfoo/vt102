@@ -1,7 +1,7 @@
 import unittest
 
 from vt102 import *
-from control import *
+from vt102.control import *
 
 class TestStream(unittest.TestCase):
     class counter:
