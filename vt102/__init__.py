@@ -307,8 +307,6 @@ class screen:
             events.add_event_listener("backspace", self._backspace)
             events.add_event_listener("tab", self._tab)
             events.add_event_listener("linefeed", self._linefeed)
-            events.add_event_listener("reverse-linefeed", 
-                                      self._reverse_linefeed)
             events.add_event_listener("carriage-return", self._carriage_return)
             events.add_event_listener("index", self._index)
             events.add_event_listener("reverse-index", self._reverse_index)
@@ -446,14 +444,6 @@ class screen:
         """
 
         self._index()
-        self.x = 0
-
-    def _reverse_linefeed(self):
-        """
-        Performs a reverse index and then a carriage return.
-        """
-
-        self._reverse_index()
         self.x = 0
 
     def _next_tab_stop(self):
