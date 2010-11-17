@@ -39,10 +39,25 @@ Here's a quick example:
  "          ",
  "          ",
  "          "]
+>>> st.process("\\x1b[H\\x1b[K")
+>>> repr(sc)
+["          ",
+ "here      ",
+ "          ",
+ "          ",
+ "          ",
+ "          ",
+ "          ",
+ "          ",
+ "          ",
+ "          "]
 """
 
 import string
 
+from copy import copy
+
+from graphics import text, colors
 from control import *
 from escape import *
 
@@ -80,6 +95,7 @@ class stream:
         VT: "linefeed",
         FF: "linefeed",
         CR: "carriage-return",
+        RLF: "reverse-linefeed",
     }
 
     escape = {
@@ -271,6 +287,14 @@ class screen:
         # Initialize the screen to completely empty.
         self.display = [" " * cols] * rows
 
+        # Initialize the attributes to completely empty, but the same size as
+        # the screen.
+        self.attributes = [[self._default()] * cols] * rows
+        self.cursor_attributes = self._default() 
+
+    def __repr__(self):
+        return repr(self.display)
+
     def attach(self, events):
         """
         Attach this screen to a events that processes commands and dispatches 
@@ -283,6 +307,8 @@ class screen:
             events.add_event_listener("backspace", self._backspace)
             events.add_event_listener("tab", self._tab)
             events.add_event_listener("linefeed", self._linefeed)
+            events.add_event_listener("reverse-linefeed", 
+                                      self._reverse_linefeed)
             events.add_event_listener("carriage-return", self._carriage_return)
             events.add_event_listener("index", self._index)
             events.add_event_listener("reverse-index", self._reverse_index)
@@ -300,10 +326,8 @@ class screen:
                                       self._delete_character)
             events.add_event_listener("insert-lines", self._insert_line)
             events.add_event_listener("delete-lines", self._delete_line)
-
-    def __repr__(self):
-        return repr(self.display)
-
+            events.add_event_listener("select-graphic-rendition",
+                                      self._select_graphic_rendition)
     def cursor(self):
         """
         The current location of the cursor.
@@ -332,10 +356,13 @@ class screen:
             # is used here so these new rows will get expanded/contracted as
             # necessary by the column resize when it happens next.
             self.display += [" " * self.size[1]] * (rows - self.size[0])
+            self.attributes += [[self._default()] * self.size[1]] * \
+                    (rows - self.size[0])
         elif self.size[0] > rows:
             # If the current display size is taller than the requested display,
             # then take rows off the top.
             self.display = self.display[self.size[0]-rows:]
+            self.attributes = self.attributes[self.size[0]-rows:]
 
         # Next, of course, resize the columns.
         if self.size[1] < cols:
@@ -343,10 +370,13 @@ class screen:
             # expand each row to be the new size.
             self.display = \
                 [row + (" " * (cols - self.size[1])) for row in self.display]
+            self.attributes = \
+                [row + ([self._default()] * (cols - self.size[1])) for row in self.attributes]
         elif self.size[1] > cols:
             # If the current display size is fatter than the requested size,
             # then trim each row from the right to be the new size.
             self.display = [row[:cols-self.size[1]] for row in self.display]
+            self.attributes = [row[:cols-self.size[1]] for row in self.attributes]
 
         self.size = (rows, cols)
         return self.size
@@ -357,8 +387,16 @@ class screen:
         cursor.
         """
 
+        # Don't make bugs where we try to print a screen. 
+        assert len(char) == 1
+
         row = self.display[self.y]
         self.display[self.y] = row[:self.x] + char + row[self.x+1:]
+
+        attrs = self.attributes[self.y]
+        self.attributes[self.y] = attrs[:self.x] + [self.cursor_attributes] + \
+                attrs[self.x+1:]
+
         self.x += 1
 
         if self.x >= self.size[1]:
@@ -408,6 +446,14 @@ class screen:
         """
 
         self._index()
+        self.x = 0
+
+    def _reverse_linefeed(self):
+        """
+        Performs a reverse index and then a carriage return.
+        """
+
+        self._reverse_index()
         self.x = 0
 
     def _next_tab_stop(self):
@@ -465,11 +511,18 @@ class screen:
     def _delete_line(self, count=1):
         """
         Deletes count lines, starting at line with cursor. As lines are 
-        deleted, lines displayed below cursor move up.
+        deleted, lines displayed below cursor move up. Lines added to bottom of
+        screen have spaces with same character attributes as last line moved 
+        up.
         """
         self.display = self.display[:self.y] + \
                        self.display[self.y+1:]
         self.display.append([" " * self.size[1]] * count)
+        self.attributes = self.attributes[:self.y] + \
+                       self.attributes[self.y+1:]
+        last_attributes = self.attributes[-1]
+        for _ in xrange(count):
+            self.attributes.append(copy(last_attributes))
 
     def _delete_character(self, count=1):
         """
@@ -478,10 +531,16 @@ class screen:
         of cursor move left.
         """
 
+        # First resize the text display
         row = self.display[self.y]
         count = min(count, self.size[1] - self.x)
         row = row[:self.x] + row[self.x+count:] + " " * count
         self.display[self.y] = row
+
+        # Then resize the attribute array too
+        attrs = self.attributes[self.y]
+        attrs = attrs[:self.x] + attrs[self.x+count:] + [self._default()] * count
+        self.attributes[self.y] = attrs 
 
     def _erase_in_line(self, type_of=0):
         """
@@ -489,16 +548,22 @@ class screen:
         """
 
         row = self.display[self.y]
+        attrs = self.attributes[self.y]
         if type_of == 0:
             # Erase from the cursor to the end of line, including the cursor
             row = row[:self.x] + " " * (self.size[1] - self.x)
+            attrs = attrs[:self.x] + [self._default()] * (self.size[1] - self.x) 
         elif type_of == 1:
             # Erase from the beginning of the line to the cursor, including it
             row = " " * (self.x+1) + row[self.x+1:]
+            attrs = [self._default()] * (self.x+1) + attrs[self.x+1:]
         elif type_of == 2:
             # Erase the entire line.
             row = " " * self.size[1]
+            attrs = [self._default()] * self.size[1]
+
         self.display[self.y] = row
+        self.attributes[self.y] = attrs
 
     def _erase_in_display(self, type_of=0):
         if type_of == 0:
@@ -506,14 +571,19 @@ class screen:
             # cursor.
             self.display = self.display[:self.y] + \
                     [" " * self.size[1]] * (self.size[0] - self.y)
+            self.attributes = self.attributes[:self.y] + \
+                    [[self._default()] * self.size[1]] * (self.size[0] - self.y)
         elif type_of == 1:
             # Erase from the beginning of the display to the cursor, including 
             # it.
             self.display = [" " * self.size[1]] * (self.y + 1) + \
                     self.display[self.y+1:]
+            self.attributes = [[self._default()] * self.size[1]] * (self.y + 1) + \
+                    self.attributes[self.y+1:]
         elif type_of == 2:
             # Erase the whole display.
             self.display = [" " * self.size[1]] * self.size[0]
+            self.attributes = [[self._default()] * self.size[1]] * self.size[0]
 
     def _set_insert_mode(self):
         self.irm = "insert"
@@ -589,3 +659,80 @@ class screen:
         Set the cursor to (0, 0)
         """
         self.y = self.x = 0
+
+    def _remove_text_attr(self, attr):
+        current = set(self.cursor_attributes[0])
+        current.remove(attr)
+        return tuple(current) + self.cursor_attributes[1:]
+
+    def _add_text_attr(self, attr):
+        current = set(self.cursor_attributes[0])
+        current.add(attr)
+        attrs = self.cursor_attributes[1:]
+        return (tuple(current), attrs[0], attrs[1]) 
+
+    def _text_attr(self, attr):
+        """
+        Given a text attribute, set the current cursor appropriately.
+        """
+        attr = text[attr]
+        if attr == "reset":
+            self.cursor_attributes = self._default()
+        elif attr == "underline-off":
+            self.cursor_attributes = self._remove_text_attr("underline")
+        elif attr == "blink-off":
+            self.cursor_attributes = self._remove_text_attr("blink")
+        elif attr == "reverse-off":
+            self.cursor_attributes = self._remove_text_attr("reverse")
+        else:
+            self.cursor_attributes = self._add_text_attr(attr)
+
+    def _color_attr(self, ground, attr):
+        """
+        Given a color attribute, set the current cursor appropriately.
+        """
+        attr = colors[ground][attr] 
+        attrs = self.cursor_attributes
+        if ground == "foreground":
+            self.cursor_attributes = (attrs[0], attr, attrs[2])
+        elif ground == "background":
+            self.cursor_attributes = (attrs[0], attrs[1], attr)
+
+    def _set_attr(self, attr):
+        """
+        Given some text attribute, set the current cursor attributes 
+        appropriately.
+        """
+        if text.has_key(attr):
+            self._text_attr(attr)
+        elif colors["foreground"].has_key(attr):
+            self._color_attr("foreground", attr)
+        elif colors["background"].has_key(attr):
+            self._color_attr("background", attr)
+
+    def _default(self):
+        """
+        Returns the default attributes (default colors and styling). The
+        value returned here should always be immutable, including it's children
+        since shallow copies are made when resizing/applying/deleting/printing.
+
+        Attributes are represented by a three-tuple that consists of the 
+        following:
+
+            1. A tuple of all the text attributes (bold, underline, etc)
+            2. The foreground color as a string (see vt102.graphics.colors)
+            2. The background color as a string (see vt102.graphics.colors) 
+        """
+        return ((), "default", "default")
+
+    def _select_graphic_rendition(self, *attrs):
+        """
+        Set the current text attribute.
+        """
+
+        if len(attrs) == 0:
+            # No arguments means that we're really trying to do a reset.
+            attrs = [0]
+
+        for attr in attrs:
+            self._set_attr(attr)

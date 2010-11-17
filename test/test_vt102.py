@@ -106,12 +106,76 @@ class TestStream(unittest.TestCase):
         assert s.state == "stream"
 
 class TestScreen(unittest.TestCase):
+    def test_attributes(self):
+        s = screen((2,2))
+        assert s.attributes == [[s._default(), s._default()]] * 2
+        s._select_graphic_rendition(1) # Bold
+
+        # Still default, since we haven't written anything.
+        assert s.attributes == [[s._default(), s._default()]] * 2
+        assert s.cursor_attributes == (("bold",), "default", "default")
+
+        s._print("f")
+        assert s.attributes == [
+            [(("bold",), "default", "default"), s._default()],
+            [s._default()                     , s._default()]
+        ] 
+
+    def test_colors(self):
+        s = screen((2,2))
+        assert s.attributes == [[s._default(), s._default()]] * 2
+        s._select_graphic_rendition(30) # black foreground
+        s._select_graphic_rendition(40) # black background
+
+        assert s.cursor_attributes == ((), "black", "black")
+        s._select_graphic_rendition(31) # red foreground
+        assert s.cursor_attributes == ((), "red", "black")
+
+    def test_reset_resets_colors(self):
+        s = screen((2,2))
+        assert s.attributes == [[s._default(), s._default()]] * 2
+        s._select_graphic_rendition(30) # black foreground
+        s._select_graphic_rendition(40) # black background
+        assert s.cursor_attributes == ((), "black", "black")
+        s._select_graphic_rendition(0)
+        assert s.cursor_attributes == s._default()
+
+    def test_multi_attribs(self):
+        s = screen((2,2))
+        assert s.attributes == [[s._default(), s._default()]] * 2
+        s._select_graphic_rendition(1) # Bold
+        s._select_graphic_rendition(5) # Blinke 
+
+        assert s.cursor_attributes == (("bold", "blink"), "default", "default")
+
+    def test_attributes_reset(self):
+        s = screen((2,2))
+        assert s.attributes == [[s._default(), s._default()]] * 2
+        s._select_graphic_rendition(1) # Bold
+        s._print("f")
+        s._print("o")
+        s._print("o")
+        assert s.attributes == [
+            [(("bold",), "default", "default"), (("bold",), "default", "default")],
+            [(("bold",), "default", "default"),                      s._default()],
+        ] 
+
+        s._home()
+        s._select_graphic_rendition(0) # Reset
+        s._print("f")
+        assert s.attributes == [
+            [s._default()                  , (("bold",), "default", "default")],
+            [(("bold",), "default", "default"),                   s._default()],
+        ] 
+
     def test_resize(self):
         s = screen((2,2))
         assert s.display == ["  ", "  "]
+        assert s.attributes == [[s._default(), s._default()]] * 2
 
         s.resize((3,3))
         assert s.display == ["   ", "   ", "   "]
+        assert s.attributes == [[s._default(), s._default(), s._default()]] * 3
 
     def test_print(self):
         s = screen((3,3))
