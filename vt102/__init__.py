@@ -95,7 +95,6 @@ class stream:
         VT: "linefeed",
         FF: "linefeed",
         CR: "carriage-return",
-        RLF: "reverse-linefeed",
     }
 
     escape = {
@@ -104,6 +103,7 @@ class stream:
         NEL: "linefeed",
         DECSC: "store-cursor",
         DECRC: "restore-cursor",
+        RLF: "reverse-linefeed",
     }
 
     sequence = {

@@ -6,6 +6,10 @@ IND = 0x44
 performs a scroll-down."""
 RI = 0x4d
 
+"""Reverse linefeed: Moves cursor up one line in same column. If cursor is at 
+top margin, screen performs scroll-down."""
+RLF = 0x49
+
 """Moves cursor to first position on next line. If cursor is at bottom margin, 
 screen performs a scroll-up."""
 NEL = 0x45

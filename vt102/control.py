@@ -9,10 +9,6 @@ HT = 0x09
 """Linefeed: Causes a linefeed."""
 LF = 0x0a
 
-"""Reverse linefeed: Moves cursor up one line in same column. If cursor is at 
-top margin, screen performs scroll-down."""
-RLF = 0x49
-
 """Vertical tab: Processed as LF."""
 VT = 0x0b
 
