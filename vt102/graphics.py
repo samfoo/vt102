@@ -1,10 +1,10 @@
 text = {
     0: "reset",
     24: "underline-off",
-    25: "bink-off",
+    25: "blink-off",
     27: "reverse-off",
     1: "bold" ,
-    2: "half-bright" ,
+    2: "dim" ,
     4: "underline",
     5: "blink",
     7: "reverse",
