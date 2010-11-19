@@ -1,14 +1,29 @@
 Scrap'in on my Scrapper Screen
 ==============================
 
-In memory vt102 emulator that lacks every feature I don't personally need. This
-project only exists to facilitate cheating more effectively at nethack via my
-other recent project, [noobhack](https://github.com/samfoo/noobhack).
+vt102 is an in memory vt102 terminal emulator. It supports all the most common
+terminal escape sequences, including text attributes and color. 
+
+Why would you want to use a terminal emulator?
+
+* Screen scraping some terminal or curses app.
+* Chicks dig dudes with terminals.
+* ... seriously, that's about it.
 
 Usage
 =====
 
-Well, when this thing actually works, it should look something like this:
+There are two important classes in vt102: screen and stream. The screen is the
+terminal screen emulator. It maintains an in-memory buffer of text and 
+text-attributes to display on screen.
+
+The stream is the stream processor. It manages the state of the input and
+dispatches events to anything that's listening about things that are going on.
+Events are things like 'linefeed', 'print "a"', or 'cursor-position 10,10'. See
+the API for more details.
+
+In general, if you just want to know what's being displayed on screen you can
+do something like the following:
 
     >>> import vt102
     >>> stream = vt102.stream()
