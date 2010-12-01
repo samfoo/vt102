@@ -95,6 +95,8 @@ class stream:
         VT: "linefeed",
         FF: "linefeed",
         CR: "carriage-return",
+        SI: "shift-in",
+        SO: "shift-out",
     }
 
     escape = {
@@ -120,6 +122,8 @@ class stream:
         DL: "delete-lines",
         SGR: "select-graphic-rendition",
         DECSTBM: "set-margins",
+        IRMI: "set-insert",
+        IRMR: "set-replace",
     }
 
     def __init__(self):
@@ -190,7 +194,8 @@ class stream:
             self.state = "stream"
 
     def _charset(self, char):
-        pass
+        self.dispatch("charset", char)
+        self.state = "stream"
 
     def _stream(self, char):
         """

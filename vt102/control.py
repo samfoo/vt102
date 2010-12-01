@@ -35,3 +35,9 @@ SUB = 0x1a
 
 """Escape: Processed as a sequence introducer."""
 ESC = 0x1b
+
+"""Shift in: Switch to the G0 character set."""
+SI = 0x0f
+
+"""Shift out: Switch to the G1 character set."""
+SO = 0x0e

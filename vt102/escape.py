@@ -76,3 +76,11 @@ SGR = 0x6d
 number of first line in the scrolling region. Pb is line number of bottom line.
 If arguments are not selected, the complete screen is used (no margins)."""
 DECSTBM = 0x72
+
+"""Selects insert mode. New display characters move old display characters to 
+the right. Characters moved past the right margin are lost."""
+IRMI = 0x68
+
+"""Selects replace mode. New display characters replace old display characters 
+at cursor position. The old character is erased."""
+IRMR = 0x6c
