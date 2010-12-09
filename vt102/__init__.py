@@ -54,6 +54,7 @@ Here's a quick example:
 """
 
 import string
+import codecs
 
 from copy import copy
 
@@ -205,10 +206,10 @@ class stream:
         num = ord(char)
         if self.basic.has_key(num):
             self.dispatch(self.basic[num])
-        elif char in string.printable:
-            self.dispatch("print", char)
         elif num == ESC:
             self.state = "escape"
+        else: 
+            self.dispatch("print", char) 
 
     def consume(self, char):
         """
@@ -280,7 +281,9 @@ class screen:
     The screen buffer can be accessed through the screen's `display` property.
     """
 
-    def __init__(self, (rows, cols)):
+    def __init__(self, (rows, cols), encoding="ascii"):
+        self.encoding = encoding
+        self.decoder = codecs.getdecoder(encoding)
         self.size = (rows, cols)
         self.x = 0
         self.y = 0
@@ -394,6 +397,8 @@ class screen:
 
         # Don't make bugs where we try to print a screen. 
         assert len(char) == 1
+
+        char = self.decoder(char)[0]
 
         row = self.display[self.y]
         self.display[self.y] = row[:self.x] + char + row[self.x+1:]
