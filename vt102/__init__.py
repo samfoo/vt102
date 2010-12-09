@@ -398,7 +398,10 @@ class screen:
         # Don't make bugs where we try to print a screen. 
         assert len(char) == 1
 
-        char = self.decoder(char)[0]
+        try:
+            char = self.decoder(char)[0]
+        except UnicodeDecodeError:
+            char = "?"
 
         row = self.display[self.y]
         self.display[self.y] = row[:self.x] + char + row[self.x+1:]
