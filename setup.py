@@ -4,7 +4,7 @@ import sys
 import vt102
 
 setup(name="vt102",
-      version="0.3.1",
+      version="0.3.2",
       author="Sam Gibson",
       author_email="sam@ifdown.net",
       url="https://github.com/samfoo/vt102",

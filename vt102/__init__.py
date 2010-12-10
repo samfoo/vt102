@@ -293,7 +293,7 @@ class screen:
         self.cursor_save_stack = []
 
         # Initialize the screen to completely empty.
-        self.display = [" " * cols] * rows
+        self.display = [u" " * cols] * rows
 
         # Initialize the attributes to completely empty, but the same size as
         # the screen.
@@ -363,7 +363,7 @@ class screen:
             # size, then add rows to the bottom. Note that the old column size
             # is used here so these new rows will get expanded/contracted as
             # necessary by the column resize when it happens next.
-            self.display += [" " * self.size[1]] * (rows - self.size[0])
+            self.display += [u" " * self.size[1]] * (rows - self.size[0])
             self.attributes += [[self._default()] * self.size[1]] * \
                     (rows - self.size[0])
         elif self.size[0] > rows:
@@ -377,7 +377,7 @@ class screen:
             # If the current display size is thinner than the requested size,
             # expand each row to be the new size.
             self.display = \
-                [row + (" " * (cols - self.size[1])) for row in self.display]
+                [row + (u" " * (cols - self.size[1])) for row in self.display]
             self.attributes = \
                 [row + ([self._default()] * (cols - self.size[1])) for row in self.attributes]
         elif self.size[1] > cols:
@@ -433,7 +433,7 @@ class screen:
         if self.y + 1 >= self.size[1]:
             # If the cursor is currently on the last row, then spawn another
             # and scroll down (removing the top row).
-            self.display = self.display[1:] + [" " * self.size[1]]
+            self.display = self.display[1:] + [u" " * self.size[1]]
         else:
             # If the cursor is anywhere else, then just move it to the 
             # next line.
@@ -447,7 +447,7 @@ class screen:
         if self.y == 0:
             # If the cursor is currently at the first row, then scroll the
             # screen up.
-            self.display = [" " * self.size[1]] + self.display[:-1]
+            self.display = [u" " * self.size[1]] + self.display[:-1]
         else:
             # If the cursor is anywhere other than the first row than just move
             # it up by one row.
@@ -517,7 +517,7 @@ class screen:
         down. Lines moved past the bottom margin are lost. 
         """
         trimmed = self.display[:self.y+1] + \
-                  [" " * self.size[1]] * count + \
+                  [u" " * self.size[1]] * count + \
                   self.display[self.y+1:self.y+count+1]
         self.display = trimmed[:self.size[0]]
 
@@ -530,7 +530,7 @@ class screen:
         """
         self.display = self.display[:self.y] + \
                        self.display[self.y+1:]
-        self.display.append([" " * self.size[1]] * count)
+        self.display.append([u" " * self.size[1]] * count)
         self.attributes = self.attributes[:self.y] + \
                        self.attributes[self.y+1:]
         last_attributes = self.attributes[-1]
@@ -547,7 +547,7 @@ class screen:
         # First resize the text display
         row = self.display[self.y]
         count = min(count, self.size[1] - self.x)
-        row = row[:self.x] + row[self.x+count:] + " " * count
+        row = row[:self.x] + row[self.x+count:] + u" " * count
         self.display[self.y] = row
 
         # Then resize the attribute array too
@@ -564,15 +564,15 @@ class screen:
         attrs = self.attributes[self.y]
         if type_of == 0:
             # Erase from the cursor to the end of line, including the cursor
-            row = row[:self.x] + " " * (self.size[1] - self.x)
+            row = row[:self.x] + u" " * (self.size[1] - self.x)
             attrs = attrs[:self.x] + [self._default()] * (self.size[1] - self.x) 
         elif type_of == 1:
             # Erase from the beginning of the line to the cursor, including it
-            row = " " * (self.x+1) + row[self.x+1:]
+            row = u" " * (self.x+1) + row[self.x+1:]
             attrs = [self._default()] * (self.x+1) + attrs[self.x+1:]
         elif type_of == 2:
             # Erase the entire line.
-            row = " " * self.size[1]
+            row = u" " * self.size[1]
             attrs = [self._default()] * self.size[1]
 
         self.display[self.y] = row
@@ -583,19 +583,19 @@ class screen:
             # Erase from cursor to the end of the display, including the 
             # cursor.
             self.display = self.display[:self.y] + \
-                    [" " * self.size[1]] * (self.size[0] - self.y)
+                    [u" " * self.size[1]] * (self.size[0] - self.y)
             self.attributes = self.attributes[:self.y] + \
                     [[self._default()] * self.size[1]] * (self.size[0] - self.y)
         elif type_of == 1:
             # Erase from the beginning of the display to the cursor, including 
             # it.
-            self.display = [" " * self.size[1]] * (self.y + 1) + \
+            self.display = [u" " * self.size[1]] * (self.y + 1) + \
                     self.display[self.y+1:]
             self.attributes = [[self._default()] * self.size[1]] * (self.y + 1) + \
                     self.attributes[self.y+1:]
         elif type_of == 2:
             # Erase the whole display.
-            self.display = [" " * self.size[1]] * self.size[0]
+            self.display = [u" " * self.size[1]] * self.size[0]
             self.attributes = [[self._default()] * self.size[1]] * self.size[0]
 
     def _set_insert_mode(self):
