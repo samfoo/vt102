@@ -208,6 +208,9 @@ class stream:
             self.dispatch(self.basic[num])
         elif num == ESC:
             self.state = "escape"
+        elif num == 0x00:
+            # nulls are just ignored.
+            pass
         else: 
             self.dispatch("print", char) 
 
