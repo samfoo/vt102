@@ -144,7 +144,9 @@ class stream:
         if char == "[":
             self.state = "escape-lb"
         elif char == "(":
-            self.state = "charset"
+            self.state = "charset-g0"
+        elif char == ")":
+            self.state = "charset-g1"
         elif self.escape.has_key(num):
             self.dispatch(self.escape[num])
             self.state = "stream"
@@ -194,8 +196,12 @@ class stream:
             # state, is just ignored.
             self.state = "stream"
 
-    def _charset(self, char):
-        self.dispatch("charset", char)
+    def _charset_g0(self, char):
+        self.dispatch("charset-g0", char)
+        self.state = "stream"
+
+    def _charset_g1(self, char):
+        self.dispatch("charset-g1", char)
         self.state = "stream"
 
     def _stream(self, char):
@@ -227,8 +233,10 @@ class stream:
             self._escape_parameters(char)
         elif self.state == "mode":
             self._mode(char)
-        elif self.state == "charset":
-            self._charset(char)
+        elif self.state == "charset-g0":
+            self._charset_g0(char)
+        elif self.state == "charset-g1":
+            self._charset_g1(char)
 
     def process(self, chars):
         """
@@ -284,7 +292,7 @@ class screen:
     The screen buffer can be accessed through the screen's `display` property.
     """
 
-    def __init__(self, (rows, cols), encoding="ascii"):
+    def __init__(self, (rows, cols), encoding="utf-8"):
         self.encoding = encoding
         self.decoder = codecs.getdecoder(encoding)
         self.size = (rows, cols)
@@ -292,6 +300,10 @@ class screen:
         self.y = 0
         self.irm = "insert"
         self.tabstops = []
+
+        self.g0 = None
+        self.g1 = None
+        self.current_charset = "g0" 
 
         self.cursor_save_stack = []
 
@@ -339,6 +351,11 @@ class screen:
             events.add_event_listener("delete-lines", self._delete_line)
             events.add_event_listener("select-graphic-rendition",
                                       self._select_graphic_rendition)
+            events.add_event_listener("charset-g0", self._charset_g0)
+            events.add_event_listener("charset-g1", self._charset_g1)
+            events.add_event_listener("shift-in", self._shift_in)
+            events.add_event_listener("shift-out", self._shift_out)
+
     def cursor(self):
         """
         The current location of the cursor.
@@ -392,6 +409,26 @@ class screen:
         self.size = (rows, cols)
         return self.size
 
+    def _shift_in(self):
+        self.current_charset = "g0"
+
+    def _shift_out(self):
+        self.current_charset = "g1"
+
+    def _charset_g0(self, cs):
+        if cs == '0':
+            self.g0 = graphics.dsg
+        else:
+            # TODO: Officially support UK/US/intl8 charsets
+            self.g0 = None
+
+    def _charset_g1(self, cs):
+        if cs == '0':
+            self.g1 = graphics.dsg
+        else:
+            # TODO: Officially support UK/US/intl8 charsets
+            self.g1 = None
+
     def _print(self, char):
         """
         Print a character at the current cursor position and advance the
@@ -405,6 +442,11 @@ class screen:
             char = self.decoder(char)[0]
         except UnicodeDecodeError:
             char = "?"
+
+        if self.current_charset == "g0" and self.g0 is not None:
+            char = char.translate(self.g0)
+        elif self.current_charset == "g1" and self.g1 is not None:
+            char = char.translate(self.g1)
 
         row = self.display[self.y]
         self.display[self.y] = row[:self.x] + char + row[self.x+1:]
