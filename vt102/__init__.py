@@ -720,7 +720,8 @@ class screen:
 
     def _remove_text_attr(self, attr):
         current = set(self.cursor_attributes[0])
-        current.remove(attr)
+        if attr in current:
+            current.remove(attr)
         return tuple(current) + self.cursor_attributes[1:]
 
     def _add_text_attr(self, attr):

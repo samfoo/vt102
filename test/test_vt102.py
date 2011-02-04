@@ -106,6 +106,12 @@ class TestStream(unittest.TestCase):
         assert s.state == "stream"
 
 class TestScreen(unittest.TestCase):
+    def test_remove_non_existant_attribute(self):
+        s = screen((2,2))
+        assert s.attributes == [[s._default(), s._default()]] * 2
+        s._remove_text_attr("underline")
+        assert s.attributes == [[s._default(), s._default()]] * 2
+
     def test_attributes(self):
         s = screen((2,2))
         assert s.attributes == [[s._default(), s._default()]] * 2
