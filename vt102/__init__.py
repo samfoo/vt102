@@ -475,7 +475,7 @@ class screen:
         the last row, create a new row at the bottom.
         """
 
-        if self.y + 1 >= self.size[1]:
+        if self.y + 1 >= self.size[0]:
             # If the cursor is currently on the last row, then spawn another
             # and scroll down (removing the top row).
             self.display = self.display[1:] + [u" " * self.size[1]]
