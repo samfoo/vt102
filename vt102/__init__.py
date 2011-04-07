@@ -198,10 +198,10 @@ class stream:
             self.current_param += char
 
     def _mode(self, char):
-        if char == "l" or char == "h":
-            # 'l' or 'h' designates the end of a mode stream. We don't really
-            # care about mode streams so anything else seen while in the mode
-            # state, is just ignored.
+        if char in "lh":
+            # 'l' or 'h' designates the end of a mode stream. We don't
+            # really care about mode streams so anything else seen while
+            # in the mode state, is just ignored.
             self.state = "stream"
 
     def _charset_g0(self, char):
