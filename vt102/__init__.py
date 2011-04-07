@@ -301,8 +301,23 @@ class screen:
     The screen buffer can be accessed through the screen's `display` property.
     """
 
+    #: Default colors and styling. The value of this attribute should
+    #: always be immutable, since shallow copies are made when resizing /
+    #: applying / deleting / printing.
+    #:
+    #: Attributes are represented by a three-tuple that consists of the
+    #: following:
+    #:
+    #:     1. A tuple of all the text attributes: `bold`, `underline`, etc
+    #:     2. The foreground color as a string, see
+    #:        :attr:`vt102.graphics.colors`
+    #:     3. The background color as a string, see
+    #:        :attr:`vt102.graphics.colors`
+    default_attributes = (), "default", "default"
+
     def __init__(self, shape, encoding="utf-8"):
         rows, cols = shape
+
         self.encoding = encoding
         self.decoder = codecs.getdecoder(encoding)
         self.size = (rows, cols)
@@ -322,8 +337,8 @@ class screen:
 
         # Initialize the attributes to completely empty, but the same size as
         # the screen.
-        self.attributes = [[self._default()] * cols] * rows
-        self.cursor_attributes = self._default() 
+        self.attributes = [[self.default_attributes] * cols] * rows
+        self.cursor_attributes = self.default_attributes
 
     def __repr__(self):
         return repr(self.display)
@@ -396,7 +411,7 @@ class screen:
             # is used here so these new rows will get expanded/contracted as
             # necessary by the column resize when it happens next.
             self.display += [u" " * self.size[1]] * (rows - self.size[0])
-            self.attributes += [[self._default()] * self.size[1]] * \
+            self.attributes += [[self.default_attributes] * self.size[1]] * \
                     (rows - self.size[0])
         elif self.size[0] > rows:
             # If the current display size is taller than the requested display,
@@ -411,7 +426,7 @@ class screen:
             self.display = \
                 [row + (u" " * (cols - self.size[1])) for row in self.display]
             self.attributes = \
-                [row + ([self._default()] * (cols - self.size[1])) for row in self.attributes]
+                [row + ([self.default_attributes] * (cols - self.size[1])) for row in self.attributes]
         elif self.size[1] > cols:
             # If the current display size is fatter than the requested size,
             # then trim each row from the right to be the new size.
@@ -612,8 +627,8 @@ class screen:
 
         # Then resize the attribute array too
         attrs = self.attributes[self.y]
-        attrs = attrs[:self.x] + attrs[self.x+count:] + [self._default()] * count
-        self.attributes[self.y] = attrs 
+        attrs = attrs[:self.x] + attrs[self.x+count:] + [self.default_attributes] * count
+        self.attributes[self.y] = attrs
 
     def _erase_in_line(self, type_of=0):
         """
@@ -625,15 +640,15 @@ class screen:
         if type_of == 0:
             # Erase from the cursor to the end of line, including the cursor
             row = row[:self.x] + u" " * (self.size[1] - self.x)
-            attrs = attrs[:self.x] + [self._default()] * (self.size[1] - self.x) 
+            attrs = attrs[:self.x] + [self.default_attributes] * (self.size[1] - self.x)
         elif type_of == 1:
             # Erase from the beginning of the line to the cursor, including it
             row = u" " * (self.x+1) + row[self.x+1:]
-            attrs = [self._default()] * (self.x+1) + attrs[self.x+1:]
+            attrs = [self.default_attributes] * (self.x+1) + attrs[self.x+1:]
         elif type_of == 2:
             # Erase the entire line.
             row = u" " * self.size[1]
-            attrs = [self._default()] * self.size[1]
+            attrs = [self.default_attributes] * self.size[1]
 
         self.display[self.y] = row
         self.attributes[self.y] = attrs
@@ -645,18 +660,18 @@ class screen:
             self.display = self.display[:self.y] + \
                     [u" " * self.size[1]] * (self.size[0] - self.y)
             self.attributes = self.attributes[:self.y] + \
-                    [[self._default()] * self.size[1]] * (self.size[0] - self.y)
+                    [[self.default_attributes] * self.size[1]] * (self.size[0] - self.y)
         elif type_of == 1:
             # Erase from the beginning of the display to the cursor, including 
             # it.
             self.display = [u" " * self.size[1]] * (self.y + 1) + \
                     self.display[self.y+1:]
-            self.attributes = [[self._default()] * self.size[1]] * (self.y + 1) + \
+            self.attributes = [[self.default_attributes] * self.size[1]] * (self.y + 1) + \
                     self.attributes[self.y+1:]
         elif type_of == 2:
             # Erase the whole display.
             self.display = [u" " * self.size[1]] * self.size[0]
-            self.attributes = [[self._default()] * self.size[1]] * self.size[0]
+            self.attributes = [[self.default_attributes] * self.size[1]] * self.size[0]
 
     def _set_insert_mode(self):
         self.irm = "insert"
@@ -751,7 +766,7 @@ class screen:
         """
         attr = text[attr]
         if attr == "reset":
-            self.cursor_attributes = self._default()
+            self.cursor_attributes = self.default_attributes
         elif attr == "underline-off":
             self.cursor_attributes = self._remove_text_attr("underline")
         elif attr == "blink-off":
@@ -783,21 +798,6 @@ class screen:
             self._color_attr("foreground", attr)
         elif attr in colors["background"]:
             self._color_attr("background", attr)
-
-    def _default(self):
-        """
-        Returns the default attributes (default colors and styling). The
-        value returned here should always be immutable, including it's children
-        since shallow copies are made when resizing/applying/deleting/printing.
-
-        Attributes are represented by a three-tuple that consists of the 
-        following:
-
-            1. A tuple of all the text attributes (bold, underline, etc)
-            2. The foreground color as a string (see vt102.graphics.colors)
-            2. The background color as a string (see vt102.graphics.colors) 
-        """
-        return ((), "default", "default")
 
     def _select_graphic_rendition(self, *attrs):
         """
