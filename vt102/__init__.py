@@ -160,9 +160,9 @@ class stream:
 
         if self.sequence.has_key(ord(char)):
             self.dispatch(self.sequence[ord(char)], *self.params)
-            self.state = "stream"
-            self.current_param = ""
-            self.params = []
+        self.state = "stream"
+        self.current_param = ""
+        self.params = []
 
     def _escape_parameters(self, char):
         """
