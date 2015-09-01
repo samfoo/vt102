@@ -58,9 +58,9 @@ import codecs
 
 from copy import copy
 
-from graphics import text, colors
-from control import *
-from escape import *
+from .graphics import text, colors
+from .control import *
+from .escape import *
 
 class stream:
     """
@@ -147,7 +147,7 @@ class stream:
             self.state = "charset-g0"
         elif char == ")":
             self.state = "charset-g1"
-        elif self.escape.has_key(num):
+        elif num in self.escape:
             self.dispatch(self.escape[num])
             self.state = "stream"
 
@@ -158,8 +158,9 @@ class stream:
         is dispatched here.
         """
 
-        if self.sequence.has_key(ord(char)):
-            self.dispatch(self.sequence[ord(char)], *self.params)
+        num = ord(char)
+        if num in self.sequence:
+            self.dispatch(self.sequence[num], *self.params)
         self.state = "stream"
         self.current_param = ""
         self.params = []
@@ -210,7 +211,7 @@ class stream:
         """
 
         num = ord(char)
-        if self.basic.has_key(num):
+        if num in self.basic:
             self.dispatch(self.basic[num])
         elif num == ESC:
             self.state = "escape"
@@ -264,7 +265,7 @@ class stream:
         :type function: callable
         """
 
-        if not self.listeners.has_key(event):
+        if event not in self.listeners:
             self.listeners[event] = []
 
         self.listeners[event].append(function)
@@ -292,7 +293,8 @@ class screen:
     The screen buffer can be accessed through the screen's `display` property.
     """
 
-    def __init__(self, (rows, cols), encoding="utf-8"):
+    def __init__(self, shape, encoding="utf-8"):
+        rows, cols = shape
         self.encoding = encoding
         self.decoder = codecs.getdecoder(encoding)
         self.size = (rows, cols)
@@ -362,7 +364,7 @@ class screen:
         """
         return (self.x, self.y)
 
-    def resize(self, (rows, cols)):
+    def resize(self, shape):
         """
         Resize the screen. If the requested screen size has more rows than the
         existing screen, rows will be added at the bottom. If the requested
@@ -373,6 +375,7 @@ class screen:
         size, columns will be added at the right, and it it has more, columns 
         will be clipped at the right.
         """
+        rows, cols = shape
 
         # Honestly though, you can't trust anyone these days...
         assert(rows > 0 and cols > 0)
@@ -762,11 +765,11 @@ class screen:
         Given some text attribute, set the current cursor attributes 
         appropriately.
         """
-        if text.has_key(attr):
+        if attr in text:
             self._text_attr(attr)
-        elif colors["foreground"].has_key(attr):
+        elif attr in colors["foreground"]:
             self._color_attr("foreground", attr)
-        elif colors["background"].has_key(attr):
+        elif attr in colors["background"]:
             self._color_attr("background", attr)
 
     def _default(self):
