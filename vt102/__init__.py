@@ -442,7 +442,7 @@ class screen:
         assert len(char) == 1
 
         try:
-            char = self.decoder(char)[0]
+            char = self.decoder(bytes(char, self.encoding))[0]
         except UnicodeDecodeError:
             char = "?"
 

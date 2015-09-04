@@ -121,7 +121,7 @@ class TestScreen(unittest.TestCase):
         assert s.attributes == [[s._default(), s._default()]] * 2
         assert s.cursor_attributes == (("bold",), "default", "default")
 
-        s._print(b"f")
+        s._print("f")
         assert s.attributes == [
             [(("bold",), "default", "default"), s._default()],
             [s._default()                     , s._default()]
@@ -158,9 +158,9 @@ class TestScreen(unittest.TestCase):
         s = screen((2,2))
         assert s.attributes == [[s._default(), s._default()]] * 2
         s._select_graphic_rendition(1) # Bold
-        s._print(b"f")
-        s._print(b"o")
-        s._print(b"o")
+        s._print("f")
+        s._print("o")
+        s._print("o")
         assert s.attributes == [
             [(("bold",), "default", "default"), (("bold",), "default", "default")],
             [(("bold",), "default", "default"),                      s._default()],
@@ -168,7 +168,7 @@ class TestScreen(unittest.TestCase):
 
         s._home()
         s._select_graphic_rendition(0) # Reset
-        s._print(b"f")
+        s._print("f")
         assert s.attributes == [
             [s._default()                  , (("bold",), "default", "default")],
             [(("bold",), "default", "default"),                   s._default()],
@@ -185,13 +185,13 @@ class TestScreen(unittest.TestCase):
 
     def test_print(self):
         s = screen((3,3))
-        s._print(b"s")
+        s._print("s")
 
         assert s.display == ["s  ", "   ", "   "]
         assert s.cursor() == (1, 0)
 
         s.x = 1; s.y = 1
-        s._print(b"a")
+        s._print("a")
 
         assert s.display == ["s  ", " a ", "   "]
 
