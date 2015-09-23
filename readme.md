@@ -1,17 +1,34 @@
-Scrap'in on my Scrapper Screen
-==============================
+# Scrap'in on my Scrapper Screen
 
-vt102 is an in memory vt102 terminal emulator. It supports all the most common
-terminal escape sequences, including text attributes and color. 
+[vt102](http://github.com/samfoo/vt102) is an in memory vt1xx terminal
+emulator. It supports all the most common terminal escape sequences, including
+text attributes and color. 
+
+It's an in memory vt1XX-compatible terminal emulator. The *XX* stands for a
+series video terminals, developed by
+[DEC](http://en.wikipedia.org/wiki/Digital_Equipment_Corporation) between 1970
+and 1995. The first, and most famous one, was VT100 terminal, which is now a
+de-facto standard for all virtual terminal emulators.
+[vt102](http://github.com/samfoo/vt102) is one such emulator.
 
 Why would you want to use a terminal emulator?
 
 * Screen scraping some terminal or curses app.
-* Chicks dig dudes with terminals.
+* Writing your own graphical terminal emulator.
 * ... seriously, that's about it.
 
-Usage
-=====
+## Installation
+
+Installation from pypi:
+
+    pip install vt102
+
+Installation from source:
+
+    git clone https://github.com/samfoo/vt102.git
+    cd vt102 && python setup.py install
+
+## Usage
 
 There are two important classes in vt102: screen and stream. The screen is the
 terminal screen emulator. It maintains an in-memory buffer of text and 
