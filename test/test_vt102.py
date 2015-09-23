@@ -150,9 +150,10 @@ class TestScreen(unittest.TestCase):
         s = screen((2,2))
         assert s.attributes == [[s._default(), s._default()]] * 2
         s._select_graphic_rendition(1) # Bold
-        s._select_graphic_rendition(5) # Blinke 
+        s._select_graphic_rendition(5) # Blink
 
-        assert s.cursor_attributes == (("bold", "blink"), "default", "default")
+        assert s.cursor_attributes == (("bold", "blink"), "default", "default") or \
+                s.cursor_attributes == (("blink", "bold"), "default", "default")
 
     def test_attributes_reset(self):
         s = screen((2,2))
