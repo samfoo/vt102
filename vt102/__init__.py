@@ -62,6 +62,9 @@ from .graphics import text, colors
 from .control import *
 from .escape import *
 
+class StreamProcessError(Exception):
+    pass
+
 class stream:
     """
     A stream is the state machine that parses a stream of terminal characters
@@ -127,11 +130,12 @@ class stream:
         IRMR: "set-replace",
     }
 
-    def __init__(self):
+    def __init__(self, fail_on_unknown_esc=True):
         self.state = "stream"
         self.params = []
         self.current_param = ""
         self.listeners = {} 
+        self.fail_on_unknown_esc = fail_on_unknown_esc
 
     def _escape_sequence(self, char):
         """
@@ -150,6 +154,8 @@ class stream:
         elif num in self.escape:
             self.dispatch(self.escape[num])
             self.state = "stream"
+        elif self.fail_on_unknown_esc:
+            raise StreamProcessError("Unexpected character '%c' == '0x%02x'" % (char, ord(char)))
 
     def _end_escape_sequence(self, char):
         """
@@ -207,7 +213,8 @@ class stream:
 
     def _stream(self, char):
         """
-        Process a character when in the default 'stream' state.
+        Process a character when in the
+        default 'stream' state.
         """
 
         num = ord(char)
