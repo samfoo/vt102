@@ -41,3 +41,6 @@ SI = 0x0f
 
 """Shift out: Switch to the G1 character set."""
 SO = 0x0e
+
+"""Bell: Generates bell tone."""
+BEL = 0x07

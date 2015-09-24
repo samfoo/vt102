@@ -101,6 +101,7 @@ class stream:
         CR: "carriage-return",
         SI: "shift-in",
         SO: "shift-out",
+        BEL: "bell"
     }
 
     escape = {
@@ -364,6 +365,7 @@ class screen:
             events.add_event_listener("charset-g1", self._charset_g1)
             events.add_event_listener("shift-in", self._shift_in)
             events.add_event_listener("shift-out", self._shift_out)
+            events.add_event_listener("bell", self._bell)
 
     def cursor(self):
         """
@@ -424,6 +426,9 @@ class screen:
 
     def _shift_out(self):
         self.current_charset = "g1"
+
+    def _bell(self):
+        pass
 
     def _charset_g0(self, cs):
         if cs == '0':

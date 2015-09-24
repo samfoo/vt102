@@ -11,6 +11,15 @@ class TestStream(unittest.TestCase):
         def __call__(self, **args):
             self.count += 1
 
+    def test_bell_emits_event(self):
+        s = stream()
+        c = self.counter()
+        s.add_event_listener("bell", c)
+        s.consume(chr(BEL))
+
+        self.assertEqual(c.count, 1)
+
+
     def test_multi_param_params(self):
         s = stream()
         s.state = "escape-lb"
