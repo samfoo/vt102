@@ -25,8 +25,8 @@ class TestStream(unittest.TestCase):
         s.state = "escape-lb"
         input = "5;25"
         s.process(input)
-        assert s.params == [5]
-        assert s.current_param == "25"
+        self.assertEqual(s.params, [5])
+        self.assertEqual(s.current_param, "25")
 
     def test_cursor_down(self):
         class argcheck:
@@ -42,8 +42,8 @@ class TestStream(unittest.TestCase):
         s.add_event_listener("cursor-down", e)
         s.process(input)
 
-        assert e.count == 1
-        assert s.state == "stream"
+        self.assertEqual(e.count, 1)
+        self.assertEqual(s.state, "stream")
 
     def test_cursor_up(self):
         class argcheck:
@@ -59,8 +59,8 @@ class TestStream(unittest.TestCase):
         s.add_event_listener("cursor-up", e)
         s.process(input)
 
-        assert e.count == 1
-        assert s.state == "stream"
+        self.assertEqual(e.count, 1)
+        self.assertEqual(s.state, "stream")
 
     def test_basic_escapes(self):
         s = stream()
@@ -69,10 +69,10 @@ class TestStream(unittest.TestCase):
             c = self.counter()
             s.add_event_listener(event, c)
             s.consume(chr(ESC))
-            assert s.state == "escape"
+            self.assertEqual(s.state, "escape")
             s.consume(chr(cmd))
-            assert c.count == 1
-            assert s.state == "stream"
+            self.assertEqual(c.count, 1)
+            self.assertEqual(s.state, "stream")
 
     def test_backspace(self):
         s = stream()
@@ -81,8 +81,8 @@ class TestStream(unittest.TestCase):
         s.add_event_listener("backspace", c)
         s.consume(chr(BS))
 
-        assert c.count == 1
-        assert s.state == "stream"
+        self.assertEqual(c.count, 1)
+        self.assertEqual(s.state, "stream")
 
     def test_tab(self):
         s = stream()
@@ -91,8 +91,8 @@ class TestStream(unittest.TestCase):
         s.add_event_listener("tab", c)
         s.consume(chr(HT))
 
-        assert c.count == 1
-        assert s.state == "stream"
+        self.assertEqual(c.count, 1)
+        self.assertEqual(s.state, "stream")
 
     def test_linefeed(self):
         s = stream()
@@ -101,8 +101,8 @@ class TestStream(unittest.TestCase):
         s.add_event_listener("linefeed", c)
         s.process(chr(LF) + chr(VT) + chr(FF))
         
-        assert c.count == 3
-        assert s.state == "stream"
+        self.assertEqual(c.count, 3)
+        self.assertEqual(s.state, "stream")
 
     def test_carriage_return(self):
         s = stream()
@@ -111,24 +111,24 @@ class TestStream(unittest.TestCase):
         s.add_event_listener("carriage-return", c)
         s.consume(chr(CR))
         
-        assert c.count == 1 
-        assert s.state == "stream"
+        self.assertEqual(c.count, 1 )
+        self.assertEqual(s.state, "stream")
 
 class TestScreen(unittest.TestCase):
     def test_remove_non_existant_attribute(self):
         s = screen((2,2))
-        assert s.attributes == [[s._default(), s._default()]] * 2
+        self.assertEqual(s.attributes, [[s._default(), s._default()]] * 2)
         s._remove_text_attr("underline")
-        assert s.attributes == [[s._default(), s._default()]] * 2
+        self.assertEqual(s.attributes, [[s._default(), s._default()]] * 2)
 
     def test_attributes(self):
         s = screen((2,2))
-        assert s.attributes == [[s._default(), s._default()]] * 2
+        self.assertEqual(s.attributes, [[s._default(), s._default()]] * 2)
         s._select_graphic_rendition(1) # Bold
 
         # Still default, since we haven't written anything.
-        assert s.attributes == [[s._default(), s._default()]] * 2
-        assert s.cursor_attributes == (("bold",), "default", "default")
+        self.assertEqual(s.attributes, [[s._default(), s._default()]] * 2)
+        self.assertEqual(s.cursor_attributes, (("bold",), "default", "default"))
 
         s._print("f")
         assert s.attributes == [
@@ -138,26 +138,26 @@ class TestScreen(unittest.TestCase):
 
     def test_colors(self):
         s = screen((2,2))
-        assert s.attributes == [[s._default(), s._default()]] * 2
+        self.assertEqual(s.attributes, [[s._default(), s._default()]] * 2)
         s._select_graphic_rendition(30) # black foreground
         s._select_graphic_rendition(40) # black background
 
-        assert s.cursor_attributes == ((), "black", "black")
+        self.assertEqual(s.cursor_attributes, ((), "black", "black"))
         s._select_graphic_rendition(31) # red foreground
-        assert s.cursor_attributes == ((), "red", "black")
+        self.assertEqual(s.cursor_attributes, ((), "red", "black"))
 
     def test_reset_resets_colors(self):
         s = screen((2,2))
-        assert s.attributes == [[s._default(), s._default()]] * 2
+        self.assertEqual(s.attributes, [[s._default(), s._default()]] * 2)
         s._select_graphic_rendition(30) # black foreground
         s._select_graphic_rendition(40) # black background
-        assert s.cursor_attributes == ((), "black", "black")
+        self.assertEqual(s.cursor_attributes, ((), "black", "black"))
         s._select_graphic_rendition(0)
-        assert s.cursor_attributes == s._default()
+        self.assertEqual(s.cursor_attributes, s._default())
 
     def test_multi_attribs(self):
         s = screen((2,2))
-        assert s.attributes == [[s._default(), s._default()]] * 2
+        self.assertEqual(s.attributes, [[s._default(), s._default()]] * 2)
         s._select_graphic_rendition(1) # Bold
         s._select_graphic_rendition(5) # Blink
 
@@ -166,7 +166,7 @@ class TestScreen(unittest.TestCase):
 
     def test_attributes_reset(self):
         s = screen((2,2))
-        assert s.attributes == [[s._default(), s._default()]] * 2
+        self.assertEqual(s.attributes, [[s._default(), s._default()]] * 2)
         s._select_graphic_rendition(1) # Bold
         s._print("f")
         s._print("o")
@@ -186,31 +186,31 @@ class TestScreen(unittest.TestCase):
 
     def test_resize(self):
         s = screen((2,2))
-        assert s.display == ["  ", "  "]
-        assert s.attributes == [[s._default(), s._default()]] * 2
+        self.assertEqual(s.display, ["  ", "  "])
+        self.assertEqual(s.attributes, [[s._default(), s._default()]] * 2)
 
         s.resize((3,3))
-        assert s.display == ["   ", "   ", "   "]
-        assert s.attributes == [[s._default(), s._default(), s._default()]] * 3
+        self.assertEqual(s.display, ["   ", "   ", "   "])
+        self.assertEqual(s.attributes, [[s._default(), s._default(), s._default()]] * 3)
 
     def test_print(self):
         s = screen((3,3))
         s._print("s")
 
-        assert s.display == ["s  ", "   ", "   "]
-        assert s.cursor() == (1, 0)
+        self.assertEqual(s.display, ["s  ", "   ", "   "])
+        self.assertEqual(s.cursor(), (1, 0))
 
         s.x = 1; s.y = 1
         s._print("a")
 
-        assert s.display == ["s  ", " a ", "   "]
+        self.assertEqual(s.display, ["s  ", " a ", "   "])
 
     def test_carriage_return(self):
         s = screen((3,3))
         s.x = 2
         s._carriage_return()
         
-        assert s.x == 0
+        self.assertEqual(s.x, 0)
 
     def test_index(self):
         s = screen((2,2))
@@ -220,15 +220,15 @@ class TestScreen(unittest.TestCase):
 
         # Indexing on a row that isn't the last should just move the cursor
         # down.
-        assert s.y == 1
-        assert s.x == 1
+        self.assertEqual(s.y, 1)
+        self.assertEqual(s.x, 1)
 
         s._index()
 
         # Indexing on the last row should push everything up and create a new
         # row at the bottom.
-        assert s.display == ["sh", "  "]
-        assert s.y == 1
+        self.assertEqual(s.display, ["sh", "  "])
+        self.assertEqual(s.y, 1)
 
     def test_reverse_index(self):
         s = screen((2,2))
@@ -238,15 +238,15 @@ class TestScreen(unittest.TestCase):
 
         # Reverse indexing on the first row should push rows down and create a
         # new row at the top.
-        assert s.y == 0 
-        assert s.x == 1
-        assert s.display == ["  ", "bo"]
+        self.assertEqual(s.y, 0 )
+        self.assertEqual(s.x, 1)
+        self.assertEqual(s.display, ["  ", "bo"])
 
         s.y = 1
         s._reverse_index()
 
-        assert s.display == ["  ", "bo"]
-        assert s.y == 0 
+        self.assertEqual(s.display, ["  ", "bo"])
+        self.assertEqual(s.y, 0 )
 
     def test_line_feed(self):
         # Line feeds are the same as indexes, except they move the cursor to
@@ -256,8 +256,8 @@ class TestScreen(unittest.TestCase):
         s.x = 1; s.y = 0
         s._linefeed()
 
-        assert s.x == 0
-        assert s.y == 1
+        self.assertEqual(s.x, 0)
+        self.assertEqual(s.y, 1)
 
     def test_tabstops(self):
         s = screen((10,10))
@@ -268,13 +268,13 @@ class TestScreen(unittest.TestCase):
 
         s.x = 0
         s._tab()
-        assert s.x == 1
+        self.assertEqual(s.x, 1)
         s._tab()
-        assert s.x == 8
+        self.assertEqual(s.x, 8)
         s._tab()
-        assert s.x == 9
+        self.assertEqual(s.x, 9)
         s._tab()
-        assert s.x == 9
+        self.assertEqual(s.x, 9)
 
     def test_clear_tabstops(self):
         s = screen((10, 10))
@@ -282,7 +282,7 @@ class TestScreen(unittest.TestCase):
         s._set_tab_stop()
         s._clear_tab_stop(0x30)
 
-        assert len(s.tabstops) == 0
+        self.assertEqual(len(s.tabstops), 0)
 
         s._set_tab_stop()
         s.x = 5
@@ -290,11 +290,11 @@ class TestScreen(unittest.TestCase):
         s.x = 9
         s._set_tab_stop()
 
-        assert len(s.tabstops) == 3
+        self.assertEqual(len(s.tabstops), 3)
 
         s._clear_tab_stop(0x33)
 
-        assert len(s.tabstops) == 0
+        self.assertEqual(len(s.tabstops), 0)
 
     def test_resize_shifts_horizontal(self):
         # If the current display is thinner than the requested size...
@@ -303,7 +303,7 @@ class TestScreen(unittest.TestCase):
         # New columns should get added to the right.
         s.resize((2,3))
 
-        assert s.display == ["bo ", "sh "]
+        self.assertEqual(s.display, ["bo ", "sh "])
 
         # If the current display is wider than the requested size...
         s = screen((2,2))
@@ -311,16 +311,16 @@ class TestScreen(unittest.TestCase):
         # Columns should be removed from the right...
         s.resize((2, 1))
 
-        assert s.display == ["b", "s"]
+        self.assertEqual(s.display, ["b", "s"])
 
     def test_backspace(self):
         s = screen((2,2))
-        assert s.x == 0
+        self.assertEqual(s.x, 0)
         s._backspace()
-        assert s.x == 0
+        self.assertEqual(s.x, 0)
         s.x = 1
         s._backspace()
-        assert s.x == 0
+        self.assertEqual(s.x, 0)
 
     def test_save_cursor(self):
         s = screen((10,10))
@@ -333,13 +333,13 @@ class TestScreen(unittest.TestCase):
         s.y = 4
         s._restore_cursor()
 
-        assert s.x == 3
-        assert s.y == 5
+        self.assertEqual(s.x, 3)
+        self.assertEqual(s.y, 5)
 
         s._restore_cursor()
 
-        assert s.x == 0
-        assert s.y == 0
+        self.assertEqual(s.x, 0)
+        self.assertEqual(s.y, 0)
 
     def test_restore_cursor_with_none_saved(self):
         s = screen((10, 10))
@@ -347,27 +347,27 @@ class TestScreen(unittest.TestCase):
         s.y = 5
         s._restore_cursor()
 
-        assert s.x == 5
-        assert s.y == 5
+        self.assertEqual(s.x, 5)
+        self.assertEqual(s.y, 5)
 
     def test_insert_line(self):
         s = screen((3,3))
         s.display = ["sam", "is ", "   "]
 
-        assert s.x == 0
-        assert s.y == 0
+        self.assertEqual(s.x, 0)
+        self.assertEqual(s.y, 0)
 
         s._insert_line(1)
 
-        assert s.display == ["sam", "   ", "is "]
+        self.assertEqual(s.display, ["sam", "   ", "is "])
 
-        assert s.x == 0
-        assert s.y == 0
+        self.assertEqual(s.x, 0)
+        self.assertEqual(s.y, 0)
 
         s.display = ["sam", "is ", "foo"]
         s._insert_line(2)
 
-        assert s.display == ["sam", "   ", "   "]
+        self.assertEqual(s.display, ["sam", "   ", "   "])
 
     def test_delete_characters(self):
         s = screen((3,3))
@@ -376,13 +376,13 @@ class TestScreen(unittest.TestCase):
         s.y = 0
         s._delete_character(2)
 
-        assert s.display == ["m  ", "is ", "foo"]
+        self.assertEqual(s.display, ["m  ", "is ", "foo"])
 
         s.y = 2
         s.x = 2
         s._delete_character(1)
 
-        assert s.display == ["m  ", "is ", "fo "]
+        self.assertEqual(s.display, ["m  ", "is ", "fo "])
 
     def test_erase_in_line(self):
         s = screen((5,5))
@@ -473,18 +473,18 @@ class TestScreen(unittest.TestCase):
 
         # Moving the cursor up at the top doesn't do anything
         s._cursor_up(1)
-        assert s.y == 0
+        self.assertEqual(s.y, 0)
 
         s.y = 1
 
         # Moving the cursor past the top moves it to the top
         s._cursor_up(10)
-        assert s.y == 0
+        self.assertEqual(s.y, 0)
 
         s.y = 5
         # Can move the cursor more than one up.
         s._cursor_up(3)
-        assert s.y == 2
+        self.assertEqual(s.y, 2)
 
     def test_cursor_down(self):
         s = screen((10, 10))
@@ -492,18 +492,18 @@ class TestScreen(unittest.TestCase):
         # Moving the cursor down at the bottom doesn't do anything
         s.y = 9
         s._cursor_down(1)
-        assert s.y == 9
+        self.assertEqual(s.y, 9)
 
         s.y = 8 
 
         # Moving the cursor past the bottom moves it to the bottom
         s._cursor_down(10)
-        assert s.y == 9 
+        self.assertEqual(s.y, 9 )
 
         s.y = 5
         # Can move the cursor more than one down.
         s._cursor_down(3)
-        assert s.y == 8
+        self.assertEqual(s.y, 8)
 
     def test_cursor_back(self):
         s = screen((10, 10))
@@ -511,18 +511,18 @@ class TestScreen(unittest.TestCase):
         # Moving the cursor left at the margin doesn't do anything
         s.x = 0 
         s._cursor_back(1)
-        assert s.x == 0
+        self.assertEqual(s.x, 0)
 
         s.x = 3 
 
         # Moving the cursor past the left margin moves it to the left margin
         s._cursor_back(10)
-        assert s.x == 0 
+        self.assertEqual(s.x, 0 )
 
         s.x = 5
         # Can move the cursor more than one back.
         s._cursor_back(3)
-        assert s.x == 2
+        self.assertEqual(s.x, 2)
 
     def test_cursor_forward(self):
         s = screen((10, 10))
@@ -530,36 +530,36 @@ class TestScreen(unittest.TestCase):
         # Moving the cursor right at the margin doesn't do anything
         s.x = 9 
         s._cursor_forward(1)
-        assert s.x == 9 
+        self.assertEqual(s.x, 9 )
 
         # Moving the cursor past the right margin moves it to the right margin
         s.x = 8 
         s._cursor_forward(10)
-        assert s.x == 9
+        self.assertEqual(s.x, 9)
 
         # Can move the cursor more than one forward.
         s.x = 5
         s._cursor_forward(3)
-        assert s.x == 8 
+        self.assertEqual(s.x, 8 )
 
     def test_cursor_position(self):
         s = screen((10, 10))
 
         # Rows/columns are backwards of x/y and are 1-indexed instead of 0-indexed
         s._cursor_position(5, 10)
-        assert s.x == 9
-        assert s.y == 4
+        self.assertEqual(s.x, 9)
+        self.assertEqual(s.y, 4)
 
         # Confusingly enough, however, 0-inputs are acceptable and should be
         # the same a 1
         s._cursor_position(0, 10)
-        assert s.x == 9
-        assert s.y == 0
+        self.assertEqual(s.x, 9)
+        self.assertEqual(s.y, 0)
 
         # Moving outside the margins constrains to within the margins.
         s._cursor_position(20, 20)
-        assert s.x == 9
-        assert s.y == 9
+        self.assertEqual(s.x, 9)
+        self.assertEqual(s.y, 9)
 
     def test_home(self):
         s = screen((10, 10))
@@ -567,8 +567,8 @@ class TestScreen(unittest.TestCase):
         s.y = 5
         s._home()
 
-        assert s.x == 0
-        assert s.y == 0
+        self.assertEqual(s.x, 0)
+        self.assertEqual(s.y, 0)
 
     def test_resize_shifts_vertical(self):
         # If the current display is shorter than the requested screen size... 
@@ -577,7 +577,7 @@ class TestScreen(unittest.TestCase):
         # New rows should get added on the bottom...
         s.resize((3,2))
 
-        assert s.display == ["bo", "sh", "  "]
+        self.assertEqual(s.display, ["bo", "sh", "  "])
 
         # If the current display is taller than the requested screen size...
         s = screen((2,2))
@@ -585,7 +585,7 @@ class TestScreen(unittest.TestCase):
         # Rows should be removed from the top...
         s.resize((1,2))
 
-        assert s.display == ["sh"]
+        self.assertEqual(s.display, ["sh"])
 
 if __name__ == "__main__":
     unittest.main()
