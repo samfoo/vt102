@@ -21,6 +21,7 @@ Here's a quick example:
     >>> from vt102 import screen, stream
     >>> st = stream()
     >>> sc = screen((10, 10))
+    >>> print(sc)
     ["          ",
      "          ",
      "          ",
@@ -33,7 +34,7 @@ Here's a quick example:
      "          "]
     >>> sc.attach(st)
     >>> st.process("Text goes here")
-    >>> repr(sc)
+    >>> print(sc)
     ["Text goes ",
      "here      ",
      "          ",
@@ -45,7 +46,7 @@ Here's a quick example:
      "          ",
      "          "]
     >>> st.process("\\x1b[H\\x1b[K")
-    >>> repr(sc)
+    >>> print(sc)
     ["          ",
      "here      ",
      "          ",
@@ -87,14 +88,15 @@ class stream:
 
         >>> s = stream()
         >>> class Cursor:
-                def __init__(self):
-                    self.x = 10; self.y = 10
-                def up(self, count):
-                    self.y -= count
+        ...     def __init__(self):
+        ...         self.x = 10; self.y = 10
+        ...     def up(self, count):
+        ...         self.y -= count
+        ...
         >>> c = Cursor()
         >>> s.add_event_listener("cursor-up", c.up)
-        >>> s.process("\\x\\00\\1b[5A") # Move the cursor up 5 rows.
-        >>> print c.y
+        >>> s.process(u"\\x00\\x1b[5A") # Move the cursor up 5 rows.
+        >>> print(c.y)
         5
     """
 
@@ -346,6 +348,11 @@ class screen:
 
     def __repr__(self):
         return repr(self.display)
+
+    def __str__(self):
+        lines = ['"%s"' % l for l in self.display]
+
+        return "[" + ",\n ".join(lines) + "]"
 
     def attach(self, events):
         """

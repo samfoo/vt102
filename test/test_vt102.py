@@ -3,6 +3,10 @@ import unittest
 from vt102 import stream, screen, escape as esc, control as ctrl
 
 class TestStream(unittest.TestCase):
+    def test_docs(self):
+        import doctest, vt102
+        doctest.testmod(vt102)
+
     class counter:
         def __init__(self):
             self.count = 0
