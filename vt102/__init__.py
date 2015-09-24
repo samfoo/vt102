@@ -178,8 +178,8 @@ class stream:
         numbers in ascii (e.g. '12', '4', '42', etc) separated by a semicolon
         (e.g. "12;4;42").
         
-        See the vt102 user guide for more details on the formatting of escape 
-        parameters. 
+        See the [vt102 user guide](http://vt100.net/docs/vt102-ug/) for more
+        details on the formatting of escape parameters. 
         """
 
         if char == ";":
@@ -187,7 +187,7 @@ class stream:
             self.current_param = ""
         elif char == "?":
             self.state = "mode"
-        elif char not in string.digits:
+        elif not char.isdigit():
             if len(self.current_param) > 0:
                 self.params.append(int(self.current_param))
 
