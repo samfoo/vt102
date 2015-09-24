@@ -1,4 +1,6 @@
-# Scrap'in on my Scrapper Screen
+![https://travis-ci.org/samfoo/vt102](https://travis-ci.org/samfoo/vt102.svg)
+
+# vt102
 
 [vt102](http://github.com/samfoo/vt102) is an in memory vt1xx terminal
 emulator. It supports all the most common terminal escape sequences, including
