@@ -1147,6 +1147,53 @@ de-facto standard for all virtual terminal emulators.
  <span class="s">&quot;          &quot;</span><span class="p">,</span>
  <span class="s">&quot;          &quot;</span><span class="p">]</span>
 </pre></div>
+
+
+<p>Here's a real-world example:</p>
+<div class="codehilite"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">vt102</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">stream</span> <span class="o">=</span> <span class="n">vt102</span><span class="o">.</span><span class="n">stream</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">screen</span> <span class="o">=</span> <span class="n">vt102</span><span class="o">.</span><span class="n">screen</span><span class="p">((</span><span class="mi">24</span><span class="p">,</span><span class="mi">80</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">screen</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">stream</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="s">u&quot;</span><span class="se">\u001b</span><span class="s">7</span><span class="se">\u001b</span><span class="s">[?47h</span><span class="se">\u001b</span><span class="s">)0</span><span class="se">\u001b</span><span class="s">[H</span><span class="se">\u001b</span><span class="s">[2J</span><span class="se">\u001b</span><span class="s">[H&quot;</span> <span class="o">+</span>
+<span class="o">...</span>                <span class="s">u&quot;</span><span class="se">\u001b</span><span class="s">[2;1HNetHack, Copyright 1985-2003</span><span class="se">\r\u001b</span><span class="s">[3;1&quot;</span> <span class="o">+</span>
+<span class="o">...</span>                <span class="s">u&quot;H         By Stichting Mathematisch Centrum and M. &quot;</span> <span class="o">+</span>
+<span class="o">...</span>                <span class="s">u&quot;Stephenson.</span><span class="se">\r\u001b</span><span class="s">[4;1H         See license for de&quot;</span> <span class="o">+</span>
+<span class="o">...</span>                <span class="s">u&quot;tails.</span><span class="se">\r\u001b</span><span class="s">[5;1H</span><span class="se">\u001b</span><span class="s">[6;1H</span><span class="se">\u001b</span><span class="s">[7;1HShall I pi&quot;</span> <span class="o">+</span>
+<span class="o">...</span>                <span class="s">u&quot;ck a character&#39;s race, role, gender and alignment f&quot;</span> <span class="o">+</span>
+<span class="o">...</span>                <span class="s">u&quot;or you? [ynq] &quot;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">print</span><span class="p">(</span><span class="n">screen</span><span class="p">)</span>
+<span class="p">[</span><span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;NetHack, Copyright 1985-2003                                                    &quot;</span><span class="p">,</span>
+ <span class="s">&quot;         By Stichting Mathematisch Centrum and M. Stephenson.                   &quot;</span><span class="p">,</span>
+ <span class="s">&quot;         See license for details.                                               &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;Shall I pick a character&#39;s race, role, gender and alignment for you? [ynq]      &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">,</span>
+ <span class="s">&quot;                                                                                &quot;</span><span class="p">]</span>
+</pre></div>
+
+
+<blockquote>
+<blockquote>
+<blockquote></blockquote>
+</blockquote>
+</blockquote>
   
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-vt102', this);">Show source &equiv;</a></p>
   <div id="source-vt102" class="source">
@@ -1209,6 +1256,46 @@ de-facto standard for all virtual terminal emulators.
 <span class="sd">     &quot;          &quot;,</span>
 <span class="sd">     &quot;          &quot;,</span>
 <span class="sd">     &quot;          &quot;]</span>
+
+<span class="sd">Here&#39;s a real-world example:</span>
+
+<span class="sd">    &gt;&gt;&gt; import vt102</span>
+<span class="sd">    &gt;&gt;&gt; stream = vt102.stream()</span>
+<span class="sd">    &gt;&gt;&gt; screen = vt102.screen((24,80))</span>
+<span class="sd">    &gt;&gt;&gt; screen.attach(stream)</span>
+<span class="sd">    &gt;&gt;&gt; stream.process(u&quot;\\u001b7\\u001b[?47h\\u001b)0\\u001b[H\\u001b[2J\\u001b[H&quot; +</span>
+<span class="sd">    ...                u&quot;\\u001b[2;1HNetHack, Copyright 1985-2003\\r\\u001b[3;1&quot; +</span>
+<span class="sd">    ...                u&quot;H         By Stichting Mathematisch Centrum and M. &quot; +</span>
+<span class="sd">    ...                u&quot;Stephenson.\\r\\u001b[4;1H         See license for de&quot; +</span>
+<span class="sd">    ...                u&quot;tails.\\r\\u001b[5;1H\\u001b[6;1H\\u001b[7;1HShall I pi&quot; +</span>
+<span class="sd">    ...                u&quot;ck a character&#39;s race, role, gender and alignment f&quot; +</span>
+<span class="sd">    ...                u&quot;or you? [ynq] &quot;)</span>
+<span class="sd">    &gt;&gt;&gt; print(screen)</span>
+<span class="sd">    [&quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;NetHack, Copyright 1985-2003                                                    &quot;,</span>
+<span class="sd">     &quot;         By Stichting Mathematisch Centrum and M. Stephenson.                   &quot;,</span>
+<span class="sd">     &quot;         See license for details.                                               &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;Shall I pick a character&#39;s race, role, gender and alignment for you? [ynq]      &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;,</span>
+<span class="sd">     &quot;                                                                                &quot;]</span>
+<span class="sd">&gt;&gt;&gt; </span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">string</span>
