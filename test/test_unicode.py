@@ -1,7 +1,6 @@
 import unittest
 
 from vt102 import *
-from vt102.control import *
 
 class TestUnicode(unittest.TestCase):
     def test_unicode_input(self):

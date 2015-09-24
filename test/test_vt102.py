@@ -1,7 +1,6 @@
 import unittest
 
-from vt102 import *
-from vt102.control import *
+from vt102 import stream, screen, escape as esc, control as ctrl
 
 class TestStream(unittest.TestCase):
     class counter:
@@ -15,7 +14,7 @@ class TestStream(unittest.TestCase):
         s = stream()
         c = self.counter()
         s.add_event_listener("bell", c)
-        s.consume(chr(BEL))
+        s.consume(chr(ctrl.BEL))
 
         self.assertEqual(c.count, 1)
 
@@ -37,7 +36,7 @@ class TestStream(unittest.TestCase):
                 assert distance == 5
 
         s = stream()
-        input = "\000" + chr(ESC) + "[5" + chr(CUD)
+        input = "\000" + chr(ctrl.ESC) + "[5" + chr(esc.CUD)
         e = argcheck()
         s.add_event_listener("cursor-down", e)
         s.process(input)
@@ -54,7 +53,7 @@ class TestStream(unittest.TestCase):
                 assert distance == 5
 
         s = stream()
-        input = "\000" + chr(ESC) + "[5" + chr(CUU)
+        input = "\000" + chr(ctrl.ESC) + "[5" + chr(esc.CUU)
         e = argcheck()
         s.add_event_listener("cursor-up", e)
         s.process(input)
@@ -68,7 +67,7 @@ class TestStream(unittest.TestCase):
         for cmd, event in stream.escape.items():
             c = self.counter()
             s.add_event_listener(event, c)
-            s.consume(chr(ESC))
+            s.consume(chr(ctrl.ESC))
             self.assertEqual(s.state, "escape")
             s.consume(chr(cmd))
             self.assertEqual(c.count, 1)
@@ -79,7 +78,7 @@ class TestStream(unittest.TestCase):
 
         c = self.counter()
         s.add_event_listener("backspace", c)
-        s.consume(chr(BS))
+        s.consume(chr(ctrl.BS))
 
         self.assertEqual(c.count, 1)
         self.assertEqual(s.state, "stream")
@@ -89,7 +88,7 @@ class TestStream(unittest.TestCase):
 
         c = self.counter()
         s.add_event_listener("tab", c)
-        s.consume(chr(HT))
+        s.consume(chr(ctrl.HT))
 
         self.assertEqual(c.count, 1)
         self.assertEqual(s.state, "stream")
@@ -99,7 +98,7 @@ class TestStream(unittest.TestCase):
 
         c = self.counter()
         s.add_event_listener("linefeed", c)
-        s.process(chr(LF) + chr(VT) + chr(FF))
+        s.process(chr(ctrl.LF) + chr(ctrl.VT) + chr(ctrl.FF))
         
         self.assertEqual(c.count, 3)
         self.assertEqual(s.state, "stream")
@@ -109,7 +108,7 @@ class TestStream(unittest.TestCase):
 
         c = self.counter()
         s.add_event_listener("carriage-return", c)
-        s.consume(chr(CR))
+        s.consume(chr(ctrl.CR))
         
         self.assertEqual(c.count, 1 )
         self.assertEqual(s.state, "stream")

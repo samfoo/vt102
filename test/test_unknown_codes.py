@@ -1,7 +1,6 @@
 import unittest
 
 from vt102 import *
-from vt102.control import *
 
 class TestUnknown(unittest.TestCase):
     def test_process_fails_on_unknown_escape_by_default(self):

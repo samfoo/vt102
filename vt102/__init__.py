@@ -1,56 +1,61 @@
 """
-vt102 implements a subset of the vt102 specification (the subset that should be
-most useful for use in software). Two classes: `stream`, which parses the 
-command stream and dispatches events for commands, and `screen` which, when
-used with a `stream` maintains a buffer of strings representing the screen of a
-terminal.
+[vt102](http://github.com/samfoo/vt102) is an in memory vt1xx terminal
+emulator. It supports all the most common terminal escape sequences, including
+text attributes and color. 
 
-Why would you ever want to use this?
+It's an in memory vt1XX-compatible terminal emulator. The *XX* stands for a
+series video terminals, developed by
+[DEC](http://en.wikipedia.org/wiki/Digital_Equipment_Corporation) between 1970
+and 1995. The first, and most famous one, was VT100 terminal, which is now a
+de-facto standard for all virtual terminal emulators.
+[vt102](http://github.com/samfoo/vt102) is one such emulator.
 
-    * Screen scraping.
-    * Cheating at nethack (I swear to god I will ascend)
-    * Chicks dig terminals, and err... VT?
+Why would you want to use a terminal emulator?
+
+* Screen scraping some terminal or curses app.
+* Writing your own graphical terminal emulator.
+* ... seriously, that's about it.
 
 Here's a quick example:
 
->>> from vt102 import screen, stream
->>> st = stream()
->>> sc = screen((10, 10))
-["          ",
- "          ",
- "          ",
- "          ",
- "          ",
- "          ",
- "          ",
- "          ",
- "          ",
- "          "]
->>> sc.attach(st)
->>> st.process("Text goes here")
->>> repr(sc)
-["Text goes ",
- "here      ",
- "          ",
- "          ",
- "          ",
- "          ",
- "          ",
- "          ",
- "          ",
- "          "]
->>> st.process("\\x1b[H\\x1b[K")
->>> repr(sc)
-["          ",
- "here      ",
- "          ",
- "          ",
- "          ",
- "          ",
- "          ",
- "          ",
- "          ",
- "          "]
+    >>> from vt102 import screen, stream
+    >>> st = stream()
+    >>> sc = screen((10, 10))
+    ["          ",
+     "          ",
+     "          ",
+     "          ",
+     "          ",
+     "          ",
+     "          ",
+     "          ",
+     "          ",
+     "          "]
+    >>> sc.attach(st)
+    >>> st.process("Text goes here")
+    >>> repr(sc)
+    ["Text goes ",
+     "here      ",
+     "          ",
+     "          ",
+     "          ",
+     "          ",
+     "          ",
+     "          ",
+     "          ",
+     "          "]
+    >>> st.process("\\x1b[H\\x1b[K")
+    >>> repr(sc)
+    ["          ",
+     "here      ",
+     "          ",
+     "          ",
+     "          ",
+     "          ",
+     "          ",
+     "          ",
+     "          ",
+     "          "]
 """
 
 import string
@@ -59,8 +64,10 @@ import codecs
 from copy import copy
 
 from .graphics import text, colors
-from .control import *
-from .escape import *
+
+from . import control as ctrl, escape as esc
+# from .control import *
+# from .escape import *
 
 class StreamProcessError(Exception):
     pass
@@ -73,62 +80,61 @@ class stream:
 
     `stream.basic`, `stream.escape`, and `stream.sequence` are the relevant 
     events that get thrown with one addition: `print`. For details on the
-    event parameters, see the vt102 user's guide:
-
-        http://vt100.net/docs/vt102-ug/
+    event parameters, see the [vt102 user's
+    guide](http://vt100.net/docs/vt102-ug/)
 
     Quick example:
 
-    >>> s = stream()
-    >>> class Cursor:
-            def __init__(self):
-                self.x = 10; self.y = 10
-            def up(self, count):
-                self.y -= count
-    >>> c = Cursor()
-    >>> s.add_event_listener("cursor-up", c.up)
-    >>> s.process("\\x\\00\\1b[5A") # Move the cursor up 5 rows.
-    >>> print c.y
-    5
+        >>> s = stream()
+        >>> class Cursor:
+                def __init__(self):
+                    self.x = 10; self.y = 10
+                def up(self, count):
+                    self.y -= count
+        >>> c = Cursor()
+        >>> s.add_event_listener("cursor-up", c.up)
+        >>> s.process("\\x\\00\\1b[5A") # Move the cursor up 5 rows.
+        >>> print c.y
+        5
     """
 
     basic = {
-        BS: "backspace",
-        HT: "tab",
-        LF: "linefeed",
-        VT: "linefeed",
-        FF: "linefeed",
-        CR: "carriage-return",
-        SI: "shift-in",
-        SO: "shift-out",
-        BEL: "bell"
+        ctrl.BS: "backspace",
+        ctrl.HT: "tab",
+        ctrl.LF: "linefeed",
+        ctrl.VT: "linefeed",
+        ctrl.FF: "linefeed",
+        ctrl.CR: "carriage-return",
+        ctrl.SI: "shift-in",
+        ctrl.SO: "shift-out",
+        ctrl.BEL: "bell"
     }
 
     escape = {
-        IND: "index",
-        RI: "reverse-index",
-        NEL: "linefeed",
-        DECSC: "store-cursor",
-        DECRC: "restore-cursor",
-        RLF: "reverse-linefeed",
+        esc.IND: "index",
+        esc.RI: "reverse-index",
+        esc.NEL: "linefeed",
+        esc.DECSC: "store-cursor",
+        esc.DECRC: "restore-cursor",
+        esc.RLF: "reverse-linefeed",
     }
 
     sequence = {
-        CUU: "cursor-up",
-        CUD: "cursor-down",
-        CUF: "cursor-right",
-        CUB: "cursor-left",
-        CUP: "cursor-move",
-        HVP: "cursor-move",
-        EL: "erase-in-line",
-        ED: "erase-in-display",
-        DCH: "delete-characters",
-        IL: "insert-lines",
-        DL: "delete-lines",
-        SGR: "select-graphic-rendition",
-        DECSTBM: "set-margins",
-        IRMI: "set-insert",
-        IRMR: "set-replace",
+        esc.CUU: "cursor-up",
+        esc.CUD: "cursor-down",
+        esc.CUF: "cursor-right",
+        esc.CUB: "cursor-left",
+        esc.CUP: "cursor-move",
+        esc.HVP: "cursor-move",
+        esc.EL: "erase-in-line",
+        esc.ED: "erase-in-display",
+        esc.DCH: "delete-characters",
+        esc.IL: "insert-lines",
+        esc.DL: "delete-lines",
+        esc.SGR: "select-graphic-rendition",
+        esc.DECSTBM: "set-margins",
+        esc.IRMI: "set-insert",
+        esc.IRMR: "set-replace",
     }
 
     def __init__(self, fail_on_unknown_esc=True):
@@ -221,7 +227,7 @@ class stream:
         num = ord(char)
         if num in self.basic:
             self.dispatch(self.basic[num])
-        elif num == ESC:
+        elif num == ctrl.ESC:
             self.state = "escape"
         elif num == 0x00:
             # nulls are just ignored.
@@ -267,10 +273,8 @@ class stream:
         More than one listener may be added for a single event. Each listener
         will be called.
         
-        :param event: The event to listen for.
-        :type event: string
-        :param function: The callable to invoke.
-        :type function: callable
+        * **event** The event to listen for.
+        * **function** The callable to invoke.
         """
 
         if event not in self.listeners:
