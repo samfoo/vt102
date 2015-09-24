@@ -57,6 +57,46 @@ Here's a quick example:
      "          ",
      "          ",
      "          "]
+
+Here's a real-world example:
+
+    >>> import vt102
+    >>> stream = vt102.stream()
+    >>> screen = vt102.screen((24,80))
+    >>> screen.attach(stream)
+    >>> stream.process(u"\\u001b7\\u001b[?47h\\u001b)0\\u001b[H\\u001b[2J\\u001b[H" +
+    ...                u"\\u001b[2;1HNetHack, Copyright 1985-2003\\r\\u001b[3;1" +
+    ...                u"H         By Stichting Mathematisch Centrum and M. " +
+    ...                u"Stephenson.\\r\\u001b[4;1H         See license for de" +
+    ...                u"tails.\\r\\u001b[5;1H\\u001b[6;1H\\u001b[7;1HShall I pi" +
+    ...                u"ck a character's race, role, gender and alignment f" +
+    ...                u"or you? [ynq] ")
+    >>> print(screen)
+    ["                                                                                ",
+     "NetHack, Copyright 1985-2003                                                    ",
+     "         By Stichting Mathematisch Centrum and M. Stephenson.                   ",
+     "         See license for details.                                               ",
+     "                                                                                ",
+     "                                                                                ",
+     "Shall I pick a character's race, role, gender and alignment for you? [ynq]      ",
+     "                                                                                ",
+     "                                                                                ",
+     "                                                                                ",
+     "                                                                                ",
+     "                                                                                ",
+     "                                                                                ",
+     "                                                                                ",
+     "                                                                                ",
+     "                                                                                ",
+     "                                                                                ",
+     "                                                                                ",
+     "                                                                                ",
+     "                                                                                ",
+     "                                                                                ",
+     "                                                                                ",
+     "                                                                                ",
+     "                                                                                "]
+>>> 
 """
 
 import string
