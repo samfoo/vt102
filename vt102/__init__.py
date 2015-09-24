@@ -482,12 +482,11 @@ class screen:
         try:
             try:
                 # Python 3
-                bs = bytes(char, self.encoding)
+                char = self.decoder(bytes(char, self.encoding))[0]
             except TypeError:
                 # Python 2.x
-                bs = char
+                char = self.decoder(char)[0]
 
-            char = self.decoder(bs)[0]
         except UnicodeDecodeError:
             char = "?"
 
