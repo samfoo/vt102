@@ -480,7 +480,14 @@ class screen:
         assert len(char) == 1
 
         try:
-            char = self.decoder(bytes(char, self.encoding))[0]
+            try:
+                # Python 3
+                bs = bytes(char, self.encoding)
+            except TypeError:
+                # Python 2.x
+                bs = char
+
+            char = self.decoder(bs)[0]
         except UnicodeDecodeError:
             char = "?"
 
